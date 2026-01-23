@@ -5,15 +5,15 @@ import CreateForm from '../view/form-create.js';
 import EditForm from '../view/form-edit.js';
 import Point from '../view/point.js';
 import Board from '../view/board.js';
-import { siteHeaderElement, siteMainElement } from '../main.js';
 import TripInfo from '../view/trip-info.js';
 import BoardItem from '../view/board-item.js';
 
 export default class Presenter {
   boardComponent = new Board();
 
-  constructor({ boardContainer }) {
+  constructor({ boardContainer, headerContainer }) {
     this.boardContainer = boardContainer;
+    this.headerContainer = headerContainer;
   }
 
   init() {
@@ -21,12 +21,12 @@ export default class Presenter {
 
     /* Header */
 
-    render(new TripInfo(), siteHeaderElement, RenderPosition.AFTERBEGIN);
-    render(new Filter(), siteHeaderElement);
+    render(new TripInfo(), this.headerContainer, RenderPosition.AFTERBEGIN);
+    render(new Filter(), this.headerContainer);
 
     /* Main page */
 
-    render(new Sort(), siteMainElement, RenderPosition.AFTERBEGIN);
+    render(new Sort(), this.boardContainer, RenderPosition.AFTERBEGIN);
 
     this.renderItem(new EditForm());
     this.renderItem(new CreateForm());

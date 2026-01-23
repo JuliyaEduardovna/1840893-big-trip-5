@@ -8,9 +8,9 @@ const siteHeaderElement = document.querySelector('.trip-main');
 
 const siteMainElement = document.querySelector('.trip-events');
 
-const pagePresenter = new Presenter({ boardContainer: siteMainElement });
+const pagePresenter = new Presenter({
+  boardContainer: siteMainElement,
+  headerContainer: siteHeaderElement,
+});
 
 pagePresenter.init();
-
-export { siteHeaderElement, siteMainElement };
-
