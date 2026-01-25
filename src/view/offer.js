@@ -1,40 +1,40 @@
 import { createElement } from '../render.js';
-import { OFFERS } from '../constants/constants.js';
 
-function createOfferItemTemplate(offerType) {
-  const offer = offerType[0];
-  const title = offerType[1];
-  const price = offerType[2];
+function createOfferTemplate(offers = []) {
+  if (!offers.length) {
+    return '<p class="event__available-offers">No additional offers</p>';
+  }
 
-  return `
-    <div class="event__offer-selector">
-      <input
-        class="event__offer-checkbox visually-hidden"
-        id="event-offer-${offer}-1"
-        type="checkbox"
-        name="event-offer-${offer}"
-        checked
-      >
-      <label class="event__offer-label" for="event-offer-${offer}-1">
-        <span class="event__offer-title">${title}</span>
-        &plus;&euro;&nbsp;
-        <span class="event__offer-price">${price}</span>
-      </label>
-    </div>
-  `;
-}
-
-function createOfferTemplate() {
   return `
     <div class="event__available-offers">
-      ${OFFERS.map((offerType) => createOfferItemTemplate(offerType)).join('')}
+      ${offers.map((offer) => `
+        <div class="event__offer-selector">
+          <input
+            class="event__offer-checkbox visually-hidden"
+            id="event-offer-${offer.id}"
+            type="checkbox"
+            name="event-offer"
+            value="${offer.id || ''}"
+            ${offer.selected ? 'checked' : ''}
+          >
+          <label class="event__offer-label" for="event-offer-${offer.id}">
+            <span class="event__offer-title">${offer.title}</span>
+            &plus;&euro;&nbsp;
+            <span class="event__offer-price">${offer.price}</span>
+          </label>
+        </div>
+      `).join('')}
     </div>
   `;
 }
 
 export default class Offer {
+  constructor(offers = []) {
+    this.offers = offers;
+  }
+
   getTemplate() {
-    return createOfferTemplate();
+    return createOfferTemplate(this.offers);
   }
 
   getElement() {
