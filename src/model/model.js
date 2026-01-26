@@ -1,0 +1,38 @@
+import { POINTS } from '../mocks/points.js';
+import { DESTINATIONS } from '../mocks/destinations.js';
+import { OFFERS } from '../mocks/offers.js';
+
+export default class Model {
+  points = POINTS;
+  destinations = DESTINATIONS;
+  offers = OFFERS;
+
+  getPoints() {
+    return this.points;
+  }
+
+  getDestinations() {
+    return this.destinations;
+  }
+
+  getOffers() {
+    return this.offers;
+  }
+
+  getOffersWithSelected(point) {
+    const offersForType = this.offers.find(
+      (group) => group.type === point.type,
+    );
+
+    const allOffers = offersForType ? offersForType.offers : [];
+
+    const mergedOffers = allOffers.map((offer) => ({
+      ...offer,
+      selected: point.offers.some(
+        (selectedOffer) => selectedOffer.id === offer.id,
+      ),
+    }));
+
+    return mergedOffers;
+  }
+}

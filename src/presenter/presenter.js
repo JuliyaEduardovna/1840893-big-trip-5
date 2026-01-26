@@ -11,34 +11,53 @@ import BoardItem from '../view/board-item.js';
 export default class Presenter {
   boardComponent = new Board();
 
-  constructor({ boardContainer, headerContainer }) {
+  constructor({ boardContainer, headerContainer, model }) {
     this.boardContainer = boardContainer;
     this.headerContainer = headerContainer;
+    this.model = model;
   }
 
   init() {
+    const points = this.model.getPoints();
+
     render(this.boardComponent, this.boardContainer);
 
     /* Header */
-
     render(new TripInfo(), this.headerContainer, RenderPosition.AFTERBEGIN);
     render(new Filter(), this.headerContainer);
 
-    /* Main page */
-
+    /* Sort */
     render(new Sort(), this.boardContainer, RenderPosition.AFTERBEGIN);
 
-    this.renderItem(new EditForm());
+    /* Edit form */
+    if (points.length > 0) {
+      const firstPoint = points[0];
+
+      this.renderItem(
+        new EditForm({
+          ...firstPoint,
+          offers: this.model.getOffersWithSelected(firstPoint),
+        }),
+      );
+    }
+
+    /* Create form */
     this.renderItem(new CreateForm());
 
-    for (let i = 0; i < 3; i++) {
-      this.renderItem(new Point());
-    }
+    /* Points */
+    points.forEach((point) => {
+      this.renderItem(
+        new Point({
+          ...point,
+          offers: this.model.getOffersWithSelected(point),
+        }),
+      );
+    });
   }
 
-  renderItem(content) {
+  renderItem(component) {
     const boardItem = new BoardItem();
     render(boardItem, this.boardComponent.getElement());
-    render(content, boardItem.getElement());
+    render(component, boardItem.getElement());
   }
 }
