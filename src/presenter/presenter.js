@@ -7,41 +7,51 @@ import Point from '../view/point.js';
 import Board from '../view/board.js';
 import TripInfo from '../view/trip-info.js';
 import BoardItem from '../view/board-item.js';
-import { generatePoints } from '../mocks/mock-generator.js';
-import { getRandomIntInRange } from '../utils/utils.js';
 
 export default class Presenter {
   boardComponent = new Board();
 
-  constructor({ boardContainer, headerContainer }) {
+  constructor({ boardContainer, headerContainer, model }) {
     this.boardContainer = boardContainer;
     this.headerContainer = headerContainer;
+    this.model = model;
   }
 
   init() {
+    const points = this.model.getPoints();
+
     render(this.boardComponent, this.boardContainer);
 
     /* Header */
     render(new TripInfo(), this.headerContainer, RenderPosition.AFTERBEGIN);
     render(new Filter(), this.headerContainer);
 
-    /* Main page */
+    /* Sort */
     render(new Sort(), this.boardContainer, RenderPosition.AFTERBEGIN);
 
-    /* Generate all points */
-    const pointsWithData = generatePoints();
+    /* Edit form */
+    if (points.length > 0) {
+      const firstPoint = points[0];
 
-    /* Generate an editing form */
-    const editPoint =
-      pointsWithData[getRandomIntInRange(0, pointsWithData.length - 1)];
-    this.renderItem(new EditForm(editPoint));
+      this.renderItem(
+        new EditForm({
+          ...firstPoint,
+          offers: this.model.getOffersWithSelected(firstPoint),
+        }),
+      );
+    }
 
-    /* Generate a creation form */
+    /* Create form */
     this.renderItem(new CreateForm());
 
-    /* Render first 3 points  */
-    pointsWithData.slice(0, 3).forEach((pointData) => {
-      this.renderItem(new Point(pointData));
+    /* Points */
+    points.forEach((point) => {
+      this.renderItem(
+        new Point({
+          ...point,
+          offers: this.model.getOffersWithSelected(point),
+        }),
+      );
     });
   }
 

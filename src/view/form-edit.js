@@ -5,27 +5,16 @@ import dayjs from 'dayjs';
 
 function createFormEditTemplate(point) {
   const {
-    type = 'flight',
+    type,
     destination,
-    basePrice = 160,
+    basePrice,
     dateFrom,
     dateTo,
     offers = [],
-    allOffers = [],
   } = point;
-
-  const destinationName = destination.name;
-  const destinationDescription =
-    destination?.description ||
-    'Chamonix-Mont-Blanc (usually shortened to Chamonix) is a resort area near the junction of France, Switzerland and Italy. At the base of Mont Blanc, the highest summit in the Alps, it is renowned for its skiing.';
 
   const formattedDateFrom = dayjs(dateFrom).format('DD/MM/YY HH:mm');
   const formattedDateTo = dayjs(dateTo).format('DD/MM/YY HH:mm');
-
-  const offersWithSelection = allOffers.map((offer) => ({
-    ...offer,
-    selected: offers.some((selected) => selected.id === offer.id),
-  }));
 
   return `
     <form class="event event--edit" action="#" method="post">
@@ -45,8 +34,10 @@ function createFormEditTemplate(point) {
         </div>
 
         <div class="event__field-group event__field-group--destination">
-          <label class="event__label event__type-output" for="event-destination-1">${type.charAt(0).toUpperCase() + type.slice(1)}</label>
-          <input class="event__input event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${destinationName}" list="destination-list-1">
+          <label class="event__label event__type-output" for="event-destination-1">
+            ${type.charAt(0).toUpperCase() + type.slice(1)}
+          </label>
+          <input class="event__input event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${destination.name}" list="destination-list-1">
           <datalist id="destination-list-1">
             <option value="Amsterdam"></option>
             <option value="Geneva"></option>
@@ -80,12 +71,12 @@ function createFormEditTemplate(point) {
       <section class="event__details">
         <section class="event__section event__section--offers">
           <h3 class="event__section-title event__section-title--offers">Offers</h3>
-          ${new Offer(offersWithSelection).getTemplate()}
+          ${new Offer(offers).getTemplate()}
         </section>
 
         <section class="event__section event__section--destination">
           <h3 class="event__section-title event__section-title--destination">Destination</h3>
-          <p class="event__destination-description">${destinationDescription}</p>
+          <p class="event__destination-description">${destination.description}</p>
         </section>
       </section>
     </form>
@@ -93,7 +84,7 @@ function createFormEditTemplate(point) {
 }
 
 export default class EditForm {
-  constructor(point = {}) {
+  constructor(point) {
     this.point = point;
   }
 
