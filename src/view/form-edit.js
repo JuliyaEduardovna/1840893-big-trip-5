@@ -1,17 +1,10 @@
-import { createElement } from '../render.js';
 import Transport from './transport.js';
 import Offer from './offer.js';
 import dayjs from 'dayjs';
+import AbstractView from '../framework/view/abstract-view.js';
 
 function createFormEditTemplate(point) {
-  const {
-    type,
-    destination,
-    basePrice,
-    dateFrom,
-    dateTo,
-    offers = [],
-  } = point;
+  const { type, destination, basePrice, dateFrom, dateTo, offers = [] } = point;
 
   const formattedDateFrom = dayjs(dateFrom).format('DD/MM/YY HH:mm');
   const formattedDateTo = dayjs(dateTo).format('DD/MM/YY HH:mm');
@@ -28,7 +21,7 @@ function createFormEditTemplate(point) {
           <div class="event__type-list">
             <fieldset class="event__type-group">
               <legend class="visually-hidden">Event type</legend>
-              ${new Transport().getTemplate()}
+              ${Transport.template}
             </fieldset>
           </div>
         </div>
@@ -71,7 +64,7 @@ function createFormEditTemplate(point) {
       <section class="event__details">
         <section class="event__section event__section--offers">
           <h3 class="event__section-title event__section-title--offers">Offers</h3>
-          ${new Offer(offers).getTemplate()}
+          ${new Offer(offers).template}
         </section>
 
         <section class="event__section event__section--destination">
@@ -83,23 +76,38 @@ function createFormEditTemplate(point) {
   `;
 }
 
-export default class EditForm {
-  constructor(point) {
-    this.point = point;
+export default class EditForm extends AbstractView {
+  #point = null;
+  #onCloseButtonClick = null;
+  #onSubmitButtonClick = null;
+
+  constructor({ point, onCloseButtonClick, onSubmitButtonClick }) {
+    super();
+    this.#point = point;
+    this.#onCloseButtonClick = onCloseButtonClick;
+    this.#onSubmitButtonClick = onSubmitButtonClick;
+    this.#setEventListener();
   }
 
-  getTemplate() {
-    return createFormEditTemplate(this.point);
+  get template() {
+    return createFormEditTemplate(this.#point);
   }
 
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-    return this.element;
+  #setEventListener() {
+    const rollupBtn = this.element.querySelector('.event__rollup-btn');
+    rollupBtn.addEventListener('click', this.#closeEditButtonClickHandler);
+
+    const form = this.element;
+    form.addEventListener('submit', this.#submitButtonClickHandler);
   }
 
-  removeElement() {
-    this.element = null;
-  }
+  #closeEditButtonClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#onCloseButtonClick();
+  };
+
+  #submitButtonClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#onSubmitButtonClick();
+  };
 }

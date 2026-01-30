@@ -3,24 +3,24 @@ import { DESTINATIONS } from '../mocks/destinations.js';
 import { OFFERS } from '../mocks/offers.js';
 
 export default class Model {
-  points = POINTS;
-  destinations = DESTINATIONS;
-  offers = OFFERS;
+  #points = POINTS;
+  #destinations = DESTINATIONS;
+  #offers = OFFERS;
 
-  getPoints() {
-    return this.points;
+  get points() {
+    return this.#points;
   }
 
-  getDestinations() {
-    return this.destinations;
+  get destinations() {
+    return this.#destinations;
   }
 
-  getOffers() {
-    return this.offers;
+  get offers() {
+    return this.#offers;
   }
 
   getOffersWithSelected(point) {
-    const offersForType = this.offers.find(
+    const offersForType = this.#offers.find(
       (group) => group.type === point.type,
     );
 

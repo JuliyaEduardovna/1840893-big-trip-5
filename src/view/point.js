@@ -1,6 +1,6 @@
-import { createElement } from '../render.js';
 import { formatDuration } from '../utils/utils.js';
 import dayjs from 'dayjs';
+import AbstractView from '../framework/view/abstract-view.js';
 
 function createPointTemplate(point) {
   const {
@@ -84,24 +84,30 @@ function createPointTemplate(point) {
   `;
 }
 
-export default class Point {
-  constructor(point) {
-    this.point = point;
+export default class Point extends AbstractView {
+  #point = null;
+  #onOpenButtonClick = null;
+
+  constructor({point, onOpenButtonClick}) {
+    super();
+    this.#point = point;
+    this.#onOpenButtonClick = onOpenButtonClick;
+    this.#setEventListener();
   }
 
-  getTemplate() {
-    return createPointTemplate(this.point);
+  get template() {
+    return createPointTemplate(this.#point);
   }
 
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
+  #setEventListener() {
+    const rollupBtn = this.element.querySelector('.event__rollup-btn');
+    rollupBtn.addEventListener('click', this.#onOpenButtonClickHandler);
+  }
+
+  #onOpenButtonClickHandler = (evt) => {
+    evt.preventDefault();
+    if (this.#onOpenButtonClick) {
+      this.#onOpenButtonClick();
     }
-
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
-  }
+  };
 }

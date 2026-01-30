@@ -1,5 +1,5 @@
-import { createElement } from '../render.js';
 import { TRANSPORT_TYPE } from '../constants/constants.js';
+import AbstractView from '../framework/view/abstract-view.js';
 
 function createTransportItemTemplate(transportType) {
   const type = transportType.toLowerCase();
@@ -32,20 +32,8 @@ function createTransportTemplate() {
   `;
 }
 
-export default class Transport {
-  getTemplate() {
+export default class Transport extends AbstractView {
+  get template() {
     return createTransportTemplate();
-  }
-
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
   }
 }

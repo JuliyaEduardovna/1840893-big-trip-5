@@ -1,4 +1,4 @@
-import { createElement } from '../render.js';
+import AbstractView from '../framework/view/abstract-view.js';
 
 function createOfferTemplate(offers = []) {
   if (!offers.length) {
@@ -28,24 +28,14 @@ function createOfferTemplate(offers = []) {
   `;
 }
 
-export default class Offer {
+export default class Offer extends AbstractView {
+  #offers = null;
   constructor(offers = []) {
-    this.offers = offers;
+    super();
+    this.#offers = offers;
   }
 
-  getTemplate() {
-    return createOfferTemplate(this.offers);
-  }
-
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
+  get template() {
+    return createOfferTemplate(this.#offers);
   }
 }
