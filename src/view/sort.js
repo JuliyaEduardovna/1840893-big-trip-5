@@ -1,5 +1,5 @@
-import { createElement } from '../render.js';
 import { SORT_TYPE } from '../constants/constants.js';
+import AbstractView from '../framework/view/abstract-view.js';
 
 function createSortItemTemplate(sortType) {
   const type = sortType.toLowerCase();
@@ -28,20 +28,8 @@ function createSortTemplate() {
   `;
 }
 
-export default class Sort {
-  getTemplate() {
+export default class Sort extends AbstractView {
+  get template() {
     return createSortTemplate();
-  }
-
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
   }
 }

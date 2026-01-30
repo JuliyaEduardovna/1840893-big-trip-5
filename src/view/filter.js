@@ -1,5 +1,5 @@
-import { createElement } from '../render.js';
 import { FILTER_TYPE } from '../constants/constants.js';
+import AbstractView from '../framework/view/abstract-view.js';
 
 function createFilterItemTemplate(filterType) {
   const type = filterType.toLowerCase();
@@ -32,20 +32,8 @@ function createFilterTemplate() {
   `;
 }
 
-export default class Filter {
-  getTemplate() {
+export default class Filter extends AbstractView {
+  get template() {
     return createFilterTemplate();
-  }
-
-  getElement() {
-    if (!this.element) {
-      this.element = createElement(this.getTemplate());
-    }
-
-    return this.element;
-  }
-
-  removeElement() {
-    this.element = null;
   }
 }
