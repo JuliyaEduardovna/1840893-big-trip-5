@@ -1,7 +1,7 @@
 import { FILTER_TYPE } from '../constants/constants.js';
 import AbstractView from '../framework/view/abstract-view.js';
 
-function createFilterItemTemplate(filterType) {
+function createFilterItemTemplate(filterType, isAvailable) {
   const type = filterType.toLowerCase();
 
   return `
@@ -12,10 +12,11 @@ function createFilterItemTemplate(filterType) {
         type="radio"
         name="trip-filter"
         value="${type}"
-        checked
+        ${filterType === 'Everything' && isAvailable ? 'checked' : ''}
+        ${isAvailable ? '' : 'disabled'}
       >
       <label
-        class="trip-filters__filter-label"
+        class="trip-filters__filter-label ${isAvailable ? '' : 'trip-filters__filter-label--disabled'}"
         for="filter-${type}"
       >
         ${filterType}
@@ -24,16 +25,37 @@ function createFilterItemTemplate(filterType) {
   `;
 }
 
-function createFilterTemplate() {
+function createFilterTemplate(availableFilters) {
+  const filterItems = FILTER_TYPE.map((filterType) =>
+    createFilterItemTemplate(
+      filterType,
+      availableFilters[filterType.toLowerCase()],
+    ),
+  ).join('');
+
   return `
     <form class="trip-filters" action="#" method="get">
-      ${FILTER_TYPE.map((type) => createFilterItemTemplate(type)).join('')}
+      ${filterItems}
     </form>
   `;
 }
 
 export default class Filter extends AbstractView {
+  #onFilterChange = null;
+
+  constructor({ availableFilters, onFilterChange }) {
+    super();
+    this.availableFilters = availableFilters;
+    this.#onFilterChange = onFilterChange;
+  }
+
   get template() {
-    return createFilterTemplate();
+    return createFilterTemplate(this.availableFilters);
+  }
+
+  setFilterChangeHandler() {
+    this.element.addEventListener('change', (event) => {
+      this.#onFilterChange(event.target.value);
+    });
   }
 }

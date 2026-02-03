@@ -1,8 +1,21 @@
 import Transport from './transport.js';
 import Offer from './offer.js';
+import dayjs from 'dayjs';
 import AbstractView from '../framework/view/abstract-view.js';
 
-function createFormCreateTemplate() {
+function createFormCreateTemplate(point = {}) {
+  const {
+    type = 'taxi',
+    destination = { name: '', description: '' },
+    basePrice = '',
+    dateFrom,
+    dateTo,
+    offers = [],
+  } = point;
+
+  const formattedDateFrom = dayjs(dateFrom).format('DD/MM/YY HH:mm');
+  const formattedDateTo = dayjs(dateTo).format('DD/MM/YY HH:mm');
+
   return `
     <form class="event event--edit" action="#" method="post">
       <header class="event__header">
@@ -13,7 +26,7 @@ function createFormCreateTemplate() {
               class="event__type-icon"
               width="17"
               height="17"
-              src="img/icons/flight.png"
+              src="img/icons/${type}.png"
               alt="Event type icon"
             >
           </label>
@@ -31,7 +44,7 @@ function createFormCreateTemplate() {
 
         <div class="event__field-group event__field-group--destination">
           <label class="event__label event__type-output" for="event-destination-1">
-            Flight
+            ${type.charAt(0).toUpperCase() + type.slice(1)}
           </label>
 
           <input
@@ -39,7 +52,7 @@ function createFormCreateTemplate() {
             id="event-destination-1"
             type="text"
             name="event-destination"
-            value="Geneva"
+            value="${destination.name}"
             list="destination-list-1"
           >
 
@@ -57,7 +70,7 @@ function createFormCreateTemplate() {
             id="event-start-time-1"
             type="text"
             name="event-start-time"
-            value="19/03/19 00:00"
+            value="${formattedDateFrom}"
           >
           &mdash;
           <label class="visually-hidden" for="event-end-time-1">To</label>
@@ -66,7 +79,7 @@ function createFormCreateTemplate() {
             id="event-end-time-1"
             type="text"
             name="event-end-time"
-            value="19/03/19 00:00"
+            value="${formattedDateTo}"
           >
         </div>
 
@@ -80,7 +93,7 @@ function createFormCreateTemplate() {
             id="event-price-1"
             type="text"
             name="event-price"
-            value=""
+            value="${basePrice}"
           >
         </div>
 
@@ -91,15 +104,13 @@ function createFormCreateTemplate() {
       <section class="event__details">
         <section class="event__section event__section--offers">
           <h3 class="event__section-title event__section-title--offers">Offers</h3>
-          ${new Offer().template}
+          ${new Offer(offers).template}
         </section>
 
         <section class="event__section event__section--destination">
           <h3 class="event__section-title event__section-title--destination">Destination</h3>
           <p class="event__destination-description">
-            Geneva is a city in Switzerland that lies at the southern tip
-            of expansive Lac Léman (Lake Geneva). Surrounded by the Alps
-            and Jura mountains, the city has views of dramatic Mont Blanc.
+            ${destination.description}
           </p>
 
           <div class="event__photos-container">
@@ -118,7 +129,14 @@ function createFormCreateTemplate() {
 }
 
 export default class CreateForm extends AbstractView {
+  #point = null;
+
+  constructor({ point = {} }) {
+    super();
+    this.#point = point;
+  }
+
   get template() {
-    return createFormCreateTemplate();
+    return createFormCreateTemplate(this.#point);
   }
 }
