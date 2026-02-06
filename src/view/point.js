@@ -87,11 +87,13 @@ function createPointTemplate(point) {
 export default class Point extends AbstractView {
   #point = null;
   #onOpenButtonClick = null;
+  #onFavoriteClick = null;
 
-  constructor({point, onOpenButtonClick}) {
+  constructor({ point, onOpenButtonClick, onFavoriteClick }) {
     super();
     this.#point = point;
     this.#onOpenButtonClick = onOpenButtonClick;
+    this.#onFavoriteClick = onFavoriteClick;
     this.#setEventListener();
   }
 
@@ -102,12 +104,22 @@ export default class Point extends AbstractView {
   #setEventListener() {
     const rollupBtn = this.element.querySelector('.event__rollup-btn');
     rollupBtn.addEventListener('click', this.#onOpenButtonClickHandler);
+
+    const favoriteIcon = this.element.querySelector('.event__favorite-icon');
+    favoriteIcon.addEventListener('click', this.#onFavoriteClickHandler);
   }
 
   #onOpenButtonClickHandler = (evt) => {
     evt.preventDefault();
     if (this.#onOpenButtonClick) {
       this.#onOpenButtonClick();
+    }
+  };
+
+  #onFavoriteClickHandler = (evt) => {
+    evt.preventDefault();
+    if (this.#onFavoriteClick) {
+      this.#onFavoriteClick();
     }
   };
 }

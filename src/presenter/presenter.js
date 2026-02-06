@@ -1,23 +1,34 @@
 import Sort from '../view/sort.js';
 import Filter from '../view/filter.js';
-import EditForm from '../view/form-edit.js';
-import Point from '../view/point.js';
 import Board from '../view/board.js';
 import TripInfo from '../view/trip-info.js';
-import BoardItem from '../view/board-item.js';
-import { render, RenderPosition, replace } from '../framework/render.js';
+import { render, RenderPosition } from '../framework/render.js';
+import PointPresenter from './point-presenter.js';
 
 export default class Presenter {
   #boardComponent = new Board();
   #boardContainer = null;
   #headerContainer = null;
   #model = null;
+  #pointPresenters = new Map();
 
   constructor({ boardContainer, headerContainer, model }) {
     this.#boardContainer = boardContainer;
     this.#headerContainer = headerContainer;
     this.#model = model;
   }
+
+  resetView = () => {
+    this.#pointPresenters.forEach((presenter) => presenter.resetView());
+  };
+
+  #updatePoint = (updatedPoint) => {
+    this.#model.updatePoint(updatedPoint);
+    const pointPresenter = this.#pointPresenters.get(updatedPoint.id);
+    if (pointPresenter) {
+      pointPresenter.updatePoint(updatedPoint);
+    }
+  };
 
   init() {
     const points = this.#model.points;
@@ -31,41 +42,18 @@ export default class Presenter {
     /* Sort */
     render(new Sort(), this.#boardContainer, RenderPosition.AFTERBEGIN);
 
-    /* Points with the edit form */
+    /* Points */
     points.forEach((point) => {
-      const boardItem = new BoardItem();
-      render(boardItem, this.#boardComponent.element);
-
-      const pointComponent = new Point({
-        point: { ...point, offers: this.#model.getOffersWithSelected(point) },
-        onOpenButtonClick: replacePointToEdit,
+      const pointPresenter = new PointPresenter({
+        container: this.#boardComponent.element,
+        point,
+        model: this.#model,
+        onViewChange: this.resetView,
+        onDataChange: this.#updatePoint,
       });
 
-      const editFormComponent = new EditForm({
-        point: { ...point, offers: this.#model.getOffersWithSelected(point) },
-        onCloseButtonClick: replaceEditToPoint,
-        onSubmitButtonClick: replaceEditToPoint,
-      });
-
-      render(pointComponent, boardItem.element);
-
-      /* Event Listeners */
-      function replaceEditToPoint() {
-        replace(pointComponent, editFormComponent);
-        document.removeEventListener('keydown', escKeyDownHandler);
-      }
-
-      function replacePointToEdit() {
-        replace(editFormComponent, pointComponent);
-        document.addEventListener('keydown', escKeyDownHandler);
-      }
-
-      function escKeyDownHandler(evt) {
-        if (evt.key === 'Escape') {
-          evt.preventDefault();
-          replaceEditToPoint();
-        }
-      }
+      pointPresenter.init();
+      this.#pointPresenters.set(point.id, pointPresenter);
     });
   }
 }
