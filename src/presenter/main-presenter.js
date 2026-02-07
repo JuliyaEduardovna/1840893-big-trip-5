@@ -4,13 +4,19 @@ import Board from '../view/board.js';
 import TripInfo from '../view/trip-info.js';
 import { render, RenderPosition } from '../framework/render.js';
 import PointPresenter from './point-presenter.js';
+import { MESSAGE_FOR_EMPTY_LIST } from '../constants/constants.js';
+import Message from '../view/message.js';
+import dayjs from 'dayjs';
 
-export default class Presenter {
+export default class MainPresenter {
   #boardComponent = new Board();
   #boardContainer = null;
   #headerContainer = null;
   #model = null;
   #pointPresenters = new Map();
+  #currentSortType = null;
+  #sortComponent = null;
+  #currentFilter = null;
 
   constructor({ boardContainer, headerContainer, model }) {
     this.#boardContainer = boardContainer;
