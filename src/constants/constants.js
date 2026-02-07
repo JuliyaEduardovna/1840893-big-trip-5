@@ -103,7 +103,7 @@ const MAX_PRICE = 1000;
 
 const POINTS_COUNT = 3;
 
-const MESSAGE_FOR_EMPTY_LIST = 'Oops, no points available. Let’s add some :)';
+const MESSAGE_FOR_EMPTY_LIST = 'Click New Event to create your first point';
 
 export {
   SORT_TYPE,
@@ -119,3 +119,4 @@ export {
   POINTS_COUNT,
   MESSAGE_FOR_EMPTY_LIST,
 };
+
