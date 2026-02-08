@@ -1,39 +1,42 @@
 import { SORT_TYPE } from '../constants/constants.js';
 import AbstractView from '../framework/view/abstract-view.js';
 
-function createSortItemTemplate(sortType) {
-  const type = sortType.toLowerCase();
-
-  return `
-    <div class="trip-sort__item trip-sort__item--${type}">
-      <input
-        id="sort-${type}"
-        class="trip-sort__input visually-hidden"
-        type="radio"
-        name="trip-sort"
-        value="sort-${type}"
-      >
-      <label class="trip-sort__btn" for="sort-${type}">
-        ${sortType}
-      </label>
-    </div>
-  `;
-}
-
 function createSortTemplate() {
+  const sortItems = SORT_TYPE.map((type) => {
+    const typeLowerCase = type.toLowerCase();
+    const disabled = type === 'Event' || type === 'Offer';
+
+    return `
+      <div class="trip-sort__item trip-sort__item--${typeLowerCase}">
+        <input
+          id="sort-${typeLowerCase}"
+          class="trip-sort__input visually-hidden"
+          type="radio"
+          name="trip-sort"
+          value="${type}"
+          ${disabled ? 'disabled' : ''}
+          data-sort-type="${type}"
+        >
+        <label class="trip-sort__btn" for="sort-${typeLowerCase}">
+          ${type}
+        </label>
+      </div>
+    `;
+  }).join('');
+
   return `
     <form class="trip-events__trip-sort trip-sort" action="#" method="get">
-      ${SORT_TYPE.map((type) => createSortItemTemplate(type)).join('')}
+      ${sortItems}
     </form>
   `;
 }
 
 export default class Sort extends AbstractView {
-  #onSortTypeChange = null;
+  #handleSortChange = null;
 
   constructor({ onSortTypeChange }) {
     super();
-    this.#onSortTypeChange = onSortTypeChange;
+    this.#handleSortChange = onSortTypeChange;
   }
 
   get template() {
@@ -41,24 +44,11 @@ export default class Sort extends AbstractView {
   }
 
   setSortTypeChangeHandler() {
-    this.element.addEventListener('change', (event) => {
-      this.#onSortTypeChange(event.target.value);
+    this.element.addEventListener('click', (evt) => {
+      const input = evt.target.closest('input');
+      if (input && !input.disabled) {
+        this.#handleSortChange(input.dataset.sortType);
+      }
     });
-  }
-
-  #sortTypeChangeHandler = (evt) => {
-    evt.preventDefault();
-    if (evt.target.tagName !== 'INPUT') {
-      return;
-    }
-
-    this.#onSortTypeChange(evt.target.value);
-  };
-
-  setActiveSort(sortType) {
-    const input = this.element.querySelector(`#sort-${sortType.toLowerCase()}`);
-    if (input) {
-      input.checked = true;
-    }
   }
 }

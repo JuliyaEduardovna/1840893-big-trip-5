@@ -1,7 +1,7 @@
 import Point from '../view/point.js';
 import EditForm from '../view/form-edit.js';
 import BoardItem from '../view/board-item.js';
-import { render, replace } from '../framework/render.js';
+import { render, replace, remove } from '../framework/render.js';
 
 export default class PointPresenter {
   #container = null;
@@ -49,6 +49,18 @@ export default class PointPresenter {
     });
 
     render(this.#pointComponent, this.#boardItem.element);
+  }
+
+  destroy() {
+    if (this.#boardItem) {
+      remove(this.#boardItem);
+      this.#boardItem = null;
+    }
+
+    this.#pointComponent = null;
+    this.#editFormComponent = null;
+
+    document.removeEventListener('keydown', this.#escKeyDownHandler);
   }
 
   updatePoint(updatedPoint) {
