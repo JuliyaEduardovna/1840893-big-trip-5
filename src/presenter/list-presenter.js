@@ -53,9 +53,14 @@ export default class ListPresenter {
           this.#renderPoints(sortedPoints);
         }
       },
+      currentSortType: this.#currentSortType,
     });
 
-    render(this.#sortComponent, this.#boardContainer, RenderPosition.AFTERBEGIN);
+    render(
+      this.#sortComponent,
+      this.#boardContainer,
+      RenderPosition.AFTERBEGIN,
+    );
     this.#sortComponent.setSortTypeChangeHandler();
   }
 
@@ -78,17 +83,21 @@ export default class ListPresenter {
       container: this.#boardComponent.element,
       point,
       model: this.#model,
-      onViewChange: () => this.#pointPresenters.forEach((presenter) => presenter.resetView()),
+      onViewChange: () =>
+        this.#pointPresenters.forEach((presenter) => presenter.resetView()),
       onDataChange: (updatedPoint) => {
         this.#model.updatePoint(updatedPoint);
 
         this.#points = this.#points.map((p) =>
-          p.id === updatedPoint.id ? updatedPoint : p
+          p.id === updatedPoint.id ? updatedPoint : p,
         );
 
         this.#pointPresenters.forEach((p) => p.destroy());
         this.#pointPresenters.clear();
-        const sortedPoints = this.#sortPoints(this.#points, this.#currentSortType);
+        const sortedPoints = this.#sortPoints(
+          this.#points,
+          this.#currentSortType,
+        );
         this.#renderPoints(sortedPoints);
       },
     });
@@ -101,7 +110,9 @@ export default class ListPresenter {
     const sortedPoints = [...points];
 
     if (sortType === 'Day') {
-      return sortedPoints.sort((a, b) => dayjs(a.dateFrom).diff(dayjs(b.dateFrom)));
+      return sortedPoints.sort((a, b) =>
+        dayjs(a.dateFrom).diff(dayjs(b.dateFrom)),
+      );
     }
 
     if (sortType === 'Time') {
