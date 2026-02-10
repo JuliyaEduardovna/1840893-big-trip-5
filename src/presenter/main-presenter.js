@@ -1,47 +1,24 @@
-import Sort from '../view/sort.js';
+import ListPresenter from './list-presenter.js';
 import Filter from '../view/filter.js';
-import Board from '../view/board.js';
 import TripInfo from '../view/trip-info.js';
 import { render, RenderPosition } from '../framework/render.js';
-import PointPresenter from './point-presenter.js';
-import { MESSAGE_FOR_EMPTY_LIST } from '../constants/constants.js';
-import Message from '../view/message.js';
 import dayjs from 'dayjs';
 
 export default class MainPresenter {
-  #boardComponent = new Board();
   #boardContainer = null;
   #headerContainer = null;
   #model = null;
-  #pointPresenters = new Map();
-  #currentSortType = null;
-  #sortComponent = null;
-  #currentFilter = null;
+  #currentFilter = 'everything';
+  #listPresenter = null;
 
   constructor({ boardContainer, headerContainer, model }) {
     this.#boardContainer = boardContainer;
     this.#headerContainer = headerContainer;
     this.#model = model;
-    this.#currentSortType = 'Day';
-    this.#currentFilter = 'everything';
   }
-
-  resetView = () => {
-    this.#pointPresenters.forEach((presenter) => presenter.resetView());
-  };
-
-  #updatePoint = (updatedPoint) => {
-    this.#model.updatePoint(updatedPoint);
-    const pointPresenter = this.#pointPresenters.get(updatedPoint.id);
-    if (pointPresenter) {
-      pointPresenter.updatePoint(updatedPoint);
-    }
-  };
 
   init() {
     const points = this.#model.points;
-
-    render(this.#boardComponent, this.#boardContainer);
 
     /* Header */
     render(new TripInfo(), this.#headerContainer, RenderPosition.AFTERBEGIN);
@@ -52,58 +29,47 @@ export default class MainPresenter {
       availableFilters,
       onFilterChange: (filterType) => {
         this.#currentFilter = filterType;
-        this.#resetSort();
+        const filteredPointsByFilter = this.#filterPoints(points, filterType);
+        this.#listPresenter.init(filteredPointsByFilter);
       },
     });
 
     render(filterComponent, this.#headerContainer);
-
     filterComponent.setFilterChangeHandler();
 
-    /* Sort */
-    this.#sortComponent = new Sort({
-      onSortTypeChange: (sortType) => {
-        this.#currentSortType = sortType;
-      },
+    /* Points List */
+    const filteredPoints = this.#filterPoints(points, this.#currentFilter); // ЭТО ОСТАВЛЯЕМ
+    this.#listPresenter = new ListPresenter({
+      boardContainer: this.#boardContainer,
+      model: this.#model,
     });
 
-    render(
-      this.#sortComponent,
-      this.#boardContainer,
-      RenderPosition.AFTERBEGIN,
-    );
-
-    this.#sortComponent.setSortTypeChangeHandler();
-
-    /* Message for empty list */
-    if (points.length === 0) {
-      const message = new Message({ message: MESSAGE_FOR_EMPTY_LIST });
-      render(message, this.#boardContainer);
-    }
-
-    /* Create form */
-    // const createForm = new CreateForm({
-    //   point: {},
-    // });
-
-    // render(createForm, this.#boardContainer, RenderPosition.AFTERBEGIN);
-
-    /* Points */
-    points.forEach((point) => {
-      const pointPresenter = new PointPresenter({
-        container: this.#boardComponent.element,
-        point,
-        model: this.#model,
-        onViewChange: this.resetView,
-        onDataChange: this.#updatePoint,
-      });
-
-      pointPresenter.init();
-      this.#pointPresenters.set(point.id, pointPresenter);
-    });
+    this.#listPresenter.init(filteredPoints);
   }
 
-  /* Find an available filters for point */
+  #filterPoints(points, filterType) {
+    const now = dayjs();
+
+    switch (filterType) {
+      case 'future':
+        return points.filter((point) => dayjs(point.dateFrom).isAfter(now));
+
+      case 'present':
+        return points.filter(
+          (point) =>
+            dayjs(point.dateFrom).isBefore(now) &&
+            dayjs(point.dateTo).isAfter(now),
+        );
+
+      case 'past':
+        return points.filter((point) => dayjs(point.dateTo).isBefore(now));
+
+      case 'everything':
+      default:
+        return [...points];
+    }
+  }
+
   #getAvailableFilters(points) {
     const now = dayjs();
 
@@ -117,13 +83,5 @@ export default class MainPresenter {
       ),
       past: points.some((point) => dayjs(point.dateTo).isBefore(now)),
     };
-  }
-
-  /* Reset sort to default ('Day') when filter changes */
-  #resetSort() {
-    this.#currentSortType = 'Day';
-    if (this.#sortComponent) {
-      this.#sortComponent.setActiveSort('Day');
-    }
   }
 }
