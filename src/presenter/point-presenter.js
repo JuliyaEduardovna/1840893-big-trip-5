@@ -46,6 +46,8 @@ export default class PointPresenter {
       point: pointWithOffers,
       onCloseButtonClick: this.#replaceEditToPoint,
       onSubmitButtonClick: this.#replaceEditToPoint,
+      destinations: this.#model.destinations,
+      offersByType: this.#model.offers,
     });
 
     render(this.#pointComponent, this.#boardItem.element);
@@ -81,6 +83,8 @@ export default class PointPresenter {
         point: pointWithOffers,
         onCloseButtonClick: this.#replaceEditToPoint,
         onSubmitButtonClick: this.#replaceEditToPoint,
+        destinations: this.#model.destinations,
+        offersByType: this.#model.offers,
       });
       replace(this.#editFormComponent, this.#pointComponent);
     } else {

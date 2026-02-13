@@ -1,10 +1,12 @@
+
 import Transport from './transport.js';
 import Offer from './offer.js';
 import dayjs from 'dayjs';
-import AbstractView from '../framework/view/abstract-view.js';
+import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 
 function createFormEditTemplate(point) {
   const { type, destination, basePrice, dateFrom, dateTo, offers = [] } = point;
+  const { description, pictures = [] } = destination;
 
   const formattedDateFrom = dayjs(dateFrom).format('DD/MM/YY HH:mm');
   const formattedDateTo = dayjs(dateTo).format('DD/MM/YY HH:mm');
@@ -21,7 +23,7 @@ function createFormEditTemplate(point) {
           <div class="event__type-list">
             <fieldset class="event__type-group">
               <legend class="visually-hidden">Event type</legend>
-              ${Transport.template}
+              ${new Transport().template}
             </fieldset>
           </div>
         </div>
@@ -69,37 +71,109 @@ function createFormEditTemplate(point) {
 
         <section class="event__section event__section--destination">
           <h3 class="event__section-title event__section-title--destination">Destination</h3>
-          <p class="event__destination-description">${destination.description}</p>
+          <p class="event__destination-description">${description}</p>
+
+          ${pictures ? `
+            <div class="event__photos-container">
+              <div class="event__photos-tape">
+                ${pictures.map((picture) => `
+                  <img class="event__photo" src="${picture.src}" alt="${picture.description || 'Photo'}">
+                `).join('')}
+              </div>
+            </div>
+          ` : ''}
         </section>
       </section>
     </form>
   `;
 }
 
-export default class EditForm extends AbstractView {
-  #point = null;
+export default class EditForm extends AbstractStatefulView {
   #onCloseButtonClick = null;
   #onSubmitButtonClick = null;
+  #destinations = null;
+  #offersByType = null;
 
-  constructor({ point, onCloseButtonClick, onSubmitButtonClick }) {
+  constructor({ point, onCloseButtonClick, onSubmitButtonClick, destinations, offersByType }) {
     super();
-    this.#point = point;
     this.#onCloseButtonClick = onCloseButtonClick;
     this.#onSubmitButtonClick = onSubmitButtonClick;
-    this.#setEventListener();
+    this.#destinations = destinations;
+    this.#offersByType = offersByType;
+    this._setState(point);
+    this._restoreHandlers();
   }
 
   get template() {
-    return createFormEditTemplate(this.#point);
+    return createFormEditTemplate(this._state);
   }
 
-  #setEventListener() {
+  _restoreHandlers() {
     const rollupBtn = this.element.querySelector('.event__rollup-btn');
-    rollupBtn.addEventListener('click', this.#closeEditButtonClickHandler);
+    if (rollupBtn) {
+      rollupBtn.addEventListener('click', this.#closeEditButtonClickHandler);
+    }
 
     const form = this.element;
     form.addEventListener('submit', this.#submitButtonClickHandler);
+
+    const typeLabels = this.element.querySelectorAll('.event__type-label');
+    typeLabels.forEach((label) => {
+      label.addEventListener('click', this.#typeLabelClickHandler);
+    });
+
+    const destinationInput = this.element.querySelector('.event__input--destination');
+    if (destinationInput) {
+      destinationInput.addEventListener('change', this.#destinationChangeHandler);
+    }
   }
+
+  #typeLabelClickHandler = (evt) => {
+    evt.preventDefault();
+
+    const label = evt.currentTarget;
+    const typeText = label.textContent.trim();
+    const newType = typeText.toLowerCase();
+
+    const offersForType = this.#offersByType.find((group) => group.type === newType);
+
+    if (!offersForType) {
+      return;
+    }
+
+    const newOffers = offersForType.offers.map((offer) => ({
+      ...offer,
+      selected: false
+    }));
+
+    this.updateElement({
+      ...this._state,
+      type: newType,
+      offers: newOffers
+    });
+  };
+
+  #destinationChangeHandler = (evt) => {
+    evt.preventDefault();
+
+    const destinationName = evt.target.value;
+
+    const selectedDestination = this.#destinations.find(
+      (dest) => dest.name === destinationName
+    );
+
+    if (selectedDestination) {
+      this.updateElement({
+        ...this._state,
+        destination: {
+          id: selectedDestination.id,
+          name: selectedDestination.name,
+          description: selectedDestination.description,
+          pictures: selectedDestination.pictures
+        }
+      });
+    }
+  };
 
   #closeEditButtonClickHandler = (evt) => {
     evt.preventDefault();
