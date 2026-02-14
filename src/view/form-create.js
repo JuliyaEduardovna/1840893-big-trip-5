@@ -2,8 +2,9 @@ import Transport from './transport.js';
 import Offer from './offer.js';
 import dayjs from 'dayjs';
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
+import { getInitialPointState } from '../utils/utils.js';
 
-function createFormCreateTemplate(point) {
+function createFormCreateTemplate(point, destinations) {
   const {
     type = 'taxi',
     destination = { name: '', description: '', pictures: [] },
@@ -59,9 +60,9 @@ function createFormCreateTemplate(point) {
           >
 
           <datalist id="destination-list-1">
-            <option value="Amsterdam"></option>
-            <option value="Geneva"></option>
-            <option value="Chamonix"></option>
+              ${destinations?.map((dest) => `
+                <option value="${dest.name}"></option>
+                `).join('') || ''}
           </datalist>
         </div>
 
@@ -139,20 +140,21 @@ export default class CreateForm extends AbstractStatefulView {
     this.#destinations = destinations;
     this.#offersByType = offersByType;
 
-    this._setState({
-      type: point.type || 'taxi',
-      destination: point.destination || { name: '', description: '', pictures: [] },
-      basePrice: point.basePrice || '',
-      dateFrom: point.dateFrom || dayjs(),
-      dateTo: point.dateTo || dayjs(),
-      offers: []
-    });
+    const initialState = getInitialPointState(point);
+
+    const offersForType = this.#offersByType?.find((group) => group.type === initialState.type);
+
+    initialState.offers = offersForType
+      ? offersForType.offers.map((offer) => ({ ...offer, selected: false }))
+      : [];
+
+    this._setState(initialState);
 
     this._restoreHandlers();
   }
 
   get template() {
-    return createFormCreateTemplate(this._state);
+    return createFormCreateTemplate(this._state, this.#destinations);
   }
 
   _restoreHandlers() {
@@ -189,7 +191,6 @@ export default class CreateForm extends AbstractStatefulView {
     }));
 
     this.updateElement({
-      ...this._state,
       type: newType,
       offers: newOffers
     });
@@ -205,13 +206,7 @@ export default class CreateForm extends AbstractStatefulView {
 
     if (selectedDestination) {
       this.updateElement({
-        ...this._state,
-        destination: {
-          id: selectedDestination.id,
-          name: selectedDestination.name,
-          description: selectedDestination.description,
-          pictures: selectedDestination.pictures
-        }
+        destination: selectedDestination
       });
     }
   };

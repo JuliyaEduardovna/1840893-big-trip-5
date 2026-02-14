@@ -3,8 +3,9 @@ import Transport from './transport.js';
 import Offer from './offer.js';
 import dayjs from 'dayjs';
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
+import { getInitialPointState } from '../utils/utils.js';
 
-function createFormEditTemplate(point) {
+function createFormEditTemplate(point, destinations) {
   const { type, destination, basePrice, dateFrom, dateTo, offers = [] } = point;
   const { description, pictures = [] } = destination;
 
@@ -21,10 +22,7 @@ function createFormEditTemplate(point) {
           </label>
           <input class="event__type-toggle visually-hidden" id="event-type-toggle-1" type="checkbox">
           <div class="event__type-list">
-            <fieldset class="event__type-group">
-              <legend class="visually-hidden">Event type</legend>
-              ${new Transport().template}
-            </fieldset>
+            ${new Transport().template}
           </div>
         </div>
 
@@ -34,9 +32,9 @@ function createFormEditTemplate(point) {
           </label>
           <input class="event__input event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${destination.name}" list="destination-list-1">
           <datalist id="destination-list-1">
-            <option value="Amsterdam"></option>
-            <option value="Geneva"></option>
-            <option value="Chamonix"></option>
+            ${destinations?.map((dest) => `
+              <option value="${dest.name}"></option>
+            `).join('') || ''}
           </datalist>
         </div>
 
@@ -100,12 +98,12 @@ export default class EditForm extends AbstractStatefulView {
     this.#onSubmitButtonClick = onSubmitButtonClick;
     this.#destinations = destinations;
     this.#offersByType = offersByType;
-    this._setState(point);
+    this._setState(getInitialPointState(point));
     this._restoreHandlers();
   }
 
   get template() {
-    return createFormEditTemplate(this._state);
+    return createFormEditTemplate(this._state, this.#destinations);
   }
 
   _restoreHandlers() {
@@ -147,7 +145,6 @@ export default class EditForm extends AbstractStatefulView {
     }));
 
     this.updateElement({
-      ...this._state,
       type: newType,
       offers: newOffers
     });
@@ -164,13 +161,7 @@ export default class EditForm extends AbstractStatefulView {
 
     if (selectedDestination) {
       this.updateElement({
-        ...this._state,
-        destination: {
-          id: selectedDestination.id,
-          name: selectedDestination.name,
-          description: selectedDestination.description,
-          pictures: selectedDestination.pictures
-        }
+        destination: selectedDestination
       });
     }
   };
