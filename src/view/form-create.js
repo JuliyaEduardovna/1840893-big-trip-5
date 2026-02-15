@@ -1,17 +1,20 @@
 import Transport from './transport.js';
 import Offer from './offer.js';
 import dayjs from 'dayjs';
-import AbstractView from '../framework/view/abstract-view.js';
+import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
+import { getInitialPointState } from '../utils/utils.js';
 
-function createFormCreateTemplate(point = {}) {
+function createFormCreateTemplate(point, destinations) {
   const {
     type = 'taxi',
-    destination = { name: '', description: '' },
+    destination = { name: '', description: '', pictures: [] },
     basePrice = '',
-    dateFrom,
-    dateTo,
-    offers = [],
+    dateFrom = dayjs(),
+    dateTo = dayjs(),
+    offers = []
   } = point;
+
+  const { description: destDescription, pictures = [] } = destination;
 
   const formattedDateFrom = dayjs(dateFrom).format('DD/MM/YY HH:mm');
   const formattedDateTo = dayjs(dateTo).format('DD/MM/YY HH:mm');
@@ -38,7 +41,7 @@ function createFormCreateTemplate(point = {}) {
           >
 
           <div class="event__type-list">
-            ${Transport.template}
+            ${new Transport().template}
           </div>
         </div>
 
@@ -57,9 +60,9 @@ function createFormCreateTemplate(point = {}) {
           >
 
           <datalist id="destination-list-1">
-            <option value="Amsterdam"></option>
-            <option value="Geneva"></option>
-            <option value="Chamonix"></option>
+              ${destinations?.map((dest) => `
+                <option value="${dest.name}"></option>
+                `).join('') || ''}
           </datalist>
         </div>
 
@@ -109,34 +112,107 @@ function createFormCreateTemplate(point = {}) {
 
         <section class="event__section event__section--destination">
           <h3 class="event__section-title event__section-title--destination">Destination</h3>
-          <p class="event__destination-description">
-            ${destination.description}
-          </p>
+          <p class="event__destination-description">${destDescription}</p>
 
-          <div class="event__photos-container">
-            <div class="event__photos-tape">
-              <img class="event__photo" src="img/photos/1.jpg" alt="Event photo">
-              <img class="event__photo" src="img/photos/2.jpg" alt="Event photo">
-              <img class="event__photo" src="img/photos/3.jpg" alt="Event photo">
-              <img class="event__photo" src="img/photos/4.jpg" alt="Event photo">
-              <img class="event__photo" src="img/photos/5.jpg" alt="Event photo">
+          ${pictures ? `
+            <div class="event__photos-container">
+              <div class="event__photos-tape">
+                ${pictures.map((picture) => `
+                  <img class="event__photo" src="${picture.src}" alt="${picture.description || 'Photo'}">
+                `).join('')}
+              </div>
             </div>
-          </div>
+          ` : ''}
         </section>
       </section>
     </form>
   `;
 }
 
-export default class CreateForm extends AbstractView {
-  #point = null;
+export default class CreateForm extends AbstractStatefulView {
+  #onSubmitButtonClick = null;
+  #destinations = null;
+  #offersByType = null;
 
-  constructor({ point = {} }) {
+  constructor({ point = {}, onSubmitButtonClick, destinations, offersByType }) {
     super();
-    this.#point = point;
+    this.#onSubmitButtonClick = onSubmitButtonClick;
+    this.#destinations = destinations;
+    this.#offersByType = offersByType;
+
+    const initialState = getInitialPointState(point);
+
+    const offersForType = this.#offersByType?.find((group) => group.type === initialState.type);
+
+    initialState.offers = offersForType
+      ? offersForType.offers.map((offer) => ({ ...offer, selected: false }))
+      : [];
+
+    this._setState(initialState);
+
+    this._restoreHandlers();
   }
 
   get template() {
-    return createFormCreateTemplate(this.#point);
+    return createFormCreateTemplate(this._state, this.#destinations);
   }
+
+  _restoreHandlers() {
+    const form = this.element;
+    form.addEventListener('submit', this.#submitButtonClickHandler);
+
+    const typeLabels = this.element.querySelectorAll('.event__type-label');
+    typeLabels.forEach((label) => {
+      label.addEventListener('click', this.#typeLabelClickHandler);
+    });
+
+    const destinationInput = this.element.querySelector('.event__input--destination');
+    if (destinationInput) {
+      destinationInput.addEventListener('change', this.#destinationChangeHandler);
+    }
+  }
+
+  #typeLabelClickHandler = (evt) => {
+    evt.preventDefault();
+
+    const label = evt.currentTarget;
+    const typeText = label.textContent.trim();
+    const newType = typeText.toLowerCase();
+
+    const offersForType = this.#offersByType.find((group) => group.type === newType);
+
+    if (!offersForType) {
+      return;
+    }
+
+    const newOffers = offersForType.offers.map((offer) => ({
+      ...offer,
+      selected: false
+    }));
+
+    this.updateElement({
+      type: newType,
+      offers: newOffers
+    });
+  };
+
+  #destinationChangeHandler = (evt) => {
+    evt.preventDefault();
+    const destinationName = evt.target.value;
+
+    const selectedDestination = this.#destinations.find(
+      (dest) => dest.name === destinationName
+    );
+
+    if (selectedDestination) {
+      this.updateElement({
+        destination: selectedDestination
+      });
+    }
+  };
+
+  #submitButtonClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#onSubmitButtonClick(this._state);
+  };
 }

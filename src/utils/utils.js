@@ -28,4 +28,20 @@ function formatDuration(dateFrom, dateTo) {
   return `${minutes}M`;
 }
 
+export function getInitialPointState(point = {}) {
+  return {
+    type: point.type || 'taxi',
+    destination: point.destination || {
+      id: '',
+      name: '',
+      description: '',
+      pictures: []
+    },
+    basePrice: point.basePrice || '',
+    dateFrom: point.dateFrom || dayjs(),
+    dateTo: point.dateTo || dayjs(),
+    offers: point.offers || []
+  };
+}
+
 export { getRandomInt, getRandomIntInRange, formatDuration };
