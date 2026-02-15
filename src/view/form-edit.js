@@ -1,9 +1,10 @@
-
 import Transport from './transport.js';
 import Offer from './offer.js';
 import dayjs from 'dayjs';
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import { getInitialPointState } from '../utils/utils.js';
+import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.min.css';
 
 function createFormEditTemplate(point, destinations) {
   const { type, destination, basePrice, dateFrom, dateTo, offers = [] } = point;
@@ -91,6 +92,7 @@ export default class EditForm extends AbstractStatefulView {
   #onSubmitButtonClick = null;
   #destinations = null;
   #offersByType = null;
+  #datepickers = [];
 
   constructor({ point, onCloseButtonClick, onSubmitButtonClick, destinations, offersByType }) {
     super();
@@ -124,6 +126,60 @@ export default class EditForm extends AbstractStatefulView {
     if (destinationInput) {
       destinationInput.addEventListener('change', this.#destinationChangeHandler);
     }
+
+    this.#initDatepickers();
+  }
+
+  #initDatepickers() {
+    this.#datepickers.forEach((picker) => picker.destroy());
+    this.#datepickers = [];
+
+    const dateFromInput = this.element.querySelector('#event-start-time-1');
+    const dateToInput = this.element.querySelector('#event-end-time-1');
+
+    if (dateFromInput) {
+      const picker = flatpickr(dateFromInput, {
+        enableTime: true,
+        dateFormat: 'd/m/y H:i',
+        // eslint-disable-next-line camelcase
+        time_24hr: true,
+        defaultDate: this._state.dateFrom || null,
+        onChange: (selectedDates, dateStr) => {
+          this.updateElement({
+            dateFrom: dateStr
+          });
+
+          const toPicker = this.#datepickers[1];
+          if (toPicker && selectedDates[0]) {
+            toPicker.set('minDate', selectedDates[0]);
+          }
+        }
+      });
+      this.#datepickers.push(picker);
+    }
+
+    if (dateToInput) {
+      const picker = flatpickr(dateToInput, {
+        enableTime: true,
+        dateFormat: 'd/m/y H:i',
+        // eslint-disable-next-line camelcase
+        time_24hr: true,
+        defaultDate: this._state.dateTo || null,
+        minDate: this._state.dateFrom || null,
+        onChange: (_, dateStr) => {
+          this.updateElement({
+            dateTo: dateStr
+          });
+        }
+      });
+      this.#datepickers.push(picker);
+    }
+  }
+
+  removeElement() {
+    this.#datepickers.forEach((picker) => picker.destroy());
+    this.#datepickers = [];
+    super.removeElement();
   }
 
   #typeLabelClickHandler = (evt) => {
