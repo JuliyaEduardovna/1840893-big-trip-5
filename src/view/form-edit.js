@@ -92,7 +92,8 @@ export default class EditForm extends AbstractStatefulView {
   #onSubmitButtonClick = null;
   #destinations = null;
   #offersByType = null;
-  #datepickers = [];
+  #dateFromPicker = null;
+  #dateToPicker = null;
 
   constructor({ point, onCloseButtonClick, onSubmitButtonClick, destinations, offersByType }) {
     super();
@@ -131,14 +132,20 @@ export default class EditForm extends AbstractStatefulView {
   }
 
   #initDatepickers() {
-    this.#datepickers.forEach((picker) => picker.destroy());
-    this.#datepickers = [];
+    if (this.#dateFromPicker) {
+      this.#dateFromPicker.destroy();
+    }
+    if (this.#dateToPicker) {
+      this.#dateToPicker.destroy();
+    }
+    this.#dateFromPicker = null;
+    this.#dateToPicker = null;
 
     const dateFromInput = this.element.querySelector('#event-start-time-1');
     const dateToInput = this.element.querySelector('#event-end-time-1');
 
     if (dateFromInput) {
-      const picker = flatpickr(dateFromInput, {
+      this.#dateFromPicker = flatpickr(dateFromInput, {
         enableTime: true,
         dateFormat: 'd/m/y H:i',
         // eslint-disable-next-line camelcase
@@ -149,17 +156,16 @@ export default class EditForm extends AbstractStatefulView {
             dateFrom: dateStr
           });
 
-          const toPicker = this.#datepickers[1];
-          if (toPicker && selectedDates[0]) {
-            toPicker.set('minDate', selectedDates[0]);
+
+          if (this.#dateToPicker && selectedDates[0]) {
+            this.#dateToPicker.set('minDate', selectedDates[0]);
           }
         }
       });
-      this.#datepickers.push(picker);
     }
 
     if (dateToInput) {
-      const picker = flatpickr(dateToInput, {
+      this.#dateToPicker = flatpickr(dateToInput, {
         enableTime: true,
         dateFormat: 'd/m/y H:i',
         // eslint-disable-next-line camelcase
@@ -172,13 +178,18 @@ export default class EditForm extends AbstractStatefulView {
           });
         }
       });
-      this.#datepickers.push(picker);
     }
   }
 
   removeElement() {
-    this.#datepickers.forEach((picker) => picker.destroy());
-    this.#datepickers = [];
+    if (this.#dateFromPicker) {
+      this.#dateFromPicker.destroy();
+    }
+    if (this.#dateToPicker) {
+      this.#dateToPicker.destroy();
+    }
+    this.#dateFromPicker = null;
+    this.#dateToPicker = null;
     super.removeElement();
   }
 
