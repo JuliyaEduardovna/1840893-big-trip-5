@@ -2,11 +2,14 @@ import Point from '../view/point.js';
 import EditForm from '../view/form-edit.js';
 import BoardItem from '../view/board-item.js';
 import { render, replace, remove } from '../framework/render.js';
+import { USER_ACTION } from '../constants/constants.js';
 
 export default class PointPresenter {
   #container = null;
   #point = null;
-  #model = null;
+  #pointsModel = null;
+  #destinationsModel = null;
+  #offersModel = null;
 
   #boardItem = null;
   #pointComponent = null;
@@ -15,10 +18,20 @@ export default class PointPresenter {
   #onDataChange = null;
   #isEditing = false;
 
-  constructor({ container, point, model, onViewChange, onDataChange }) {
+  constructor({
+    container,
+    point,
+    pointsModel,
+    destinationsModel,
+    offersModel,
+    onViewChange,
+    onDataChange,
+  }) {
     this.#container = container;
     this.#point = point;
-    this.#model = model;
+    this.#pointsModel = pointsModel;
+    this.#destinationsModel = destinationsModel;
+    this.#offersModel = offersModel;
     this.#onViewChange = onViewChange;
     this.#onDataChange = onDataChange;
   }
@@ -33,7 +46,7 @@ export default class PointPresenter {
 
     const pointWithOffers = {
       ...this.#point,
-      offers: this.#model.getOffersWithSelected(this.#point),
+      offers: this.#offersModel.getOffersWithSelected(this.#point),
     };
 
     this.#pointComponent = new Point({
@@ -46,8 +59,9 @@ export default class PointPresenter {
       point: pointWithOffers,
       onCloseButtonClick: this.#replaceEditToPoint,
       onSubmitButtonClick: this.#replaceEditToPoint,
-      destinations: this.#model.destinations,
-      offersByType: this.#model.offers,
+      onDeleteButtonClick: this.#handleDeleteClick,
+      destinations: this.#destinationsModel.getDestinations(),
+      offersByType: this.#offersModel.getOffers(),
     });
 
     render(this.#pointComponent, this.#boardItem.element);
@@ -69,7 +83,7 @@ export default class PointPresenter {
     this.#point = updatedPoint;
     const pointWithOffers = {
       ...this.#point,
-      offers: this.#model.getOffersWithSelected(this.#point),
+      offers: this.#offersModel.getOffersWithSelected(this.#point),
     };
 
     const newPointComponent = new Point({
@@ -82,9 +96,10 @@ export default class PointPresenter {
       this.#editFormComponent = new EditForm({
         point: pointWithOffers,
         onCloseButtonClick: this.#replaceEditToPoint,
-        onSubmitButtonClick: this.#replaceEditToPoint,
-        destinations: this.#model.destinations,
-        offersByType: this.#model.offers,
+        onSubmitButtonClick: this.#handleFormSubmit,
+        onDeleteButtonClick: this.#handleDeleteClick,
+        destinations: this.#destinationsModel.getDestinations(),
+        offersByType: this.#offersModel.getOffers(),
       });
       replace(this.#editFormComponent, this.#pointComponent);
     } else {
@@ -106,7 +121,22 @@ export default class PointPresenter {
       isFavorite: !this.#point.isFavorite,
     };
 
-    this.#onDataChange(updatedPoint);
+    this.#onDataChange(
+      USER_ACTION.UPDATE_POINT,
+      updatedPoint,
+    );
+  };
+
+  #handleDeleteClick = () => {
+    this.#onDataChange(
+      USER_ACTION.DELETE_POINT,
+      this.#point,
+    );
+  };
+
+  #handleFormSubmit = (updatedPoint) => {
+    this.#onDataChange(USER_ACTION.UPDATE_POINT, updatedPoint);
+    this.#replaceEditToPoint();
   };
 
   #replacePointToEdit = () => {

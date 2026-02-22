@@ -3,6 +3,7 @@ import Offer from './offer.js';
 import dayjs from 'dayjs';
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import { getInitialPointState } from '../utils/utils.js';
+import he from 'he';
 
 function createFormCreateTemplate(point, destinations) {
   const {
@@ -55,13 +56,13 @@ function createFormCreateTemplate(point, destinations) {
             id="event-destination-1"
             type="text"
             name="event-destination"
-            value="${destination.name}"
+            value="${he.encode(destination.name)}"
             list="destination-list-1"
           >
 
           <datalist id="destination-list-1">
               ${destinations?.map((dest) => `
-                <option value="${dest.name}"></option>
+                <option value="${he.encode(dest.name)}"></option>
                 `).join('') || ''}
           </datalist>
         </div>
@@ -94,9 +95,10 @@ function createFormCreateTemplate(point, destinations) {
           <input
             class="event__input event__input--price"
             id="event-price-1"
-            type="text"
             name="event-price"
             value="${basePrice}"
+            type="number"
+            min="0"
           >
         </div>
 
@@ -112,13 +114,13 @@ function createFormCreateTemplate(point, destinations) {
 
         <section class="event__section event__section--destination">
           <h3 class="event__section-title event__section-title--destination">Destination</h3>
-          <p class="event__destination-description">${destDescription}</p>
+          <p class="event__destination-description">${he.encode(destDescription)}</p>
 
           ${pictures ? `
             <div class="event__photos-container">
               <div class="event__photos-tape">
                 ${pictures.map((picture) => `
-                  <img class="event__photo" src="${picture.src}" alt="${picture.description || 'Photo'}">
+                  <img class="event__photo" src="${he.encode(picture.src)}" alt="${he.encode(picture.description || 'Photo')}">
                 `).join('')}
               </div>
             </div>
@@ -133,12 +135,14 @@ export default class CreateForm extends AbstractStatefulView {
   #onSubmitButtonClick = null;
   #destinations = null;
   #offersByType = null;
+  #onCancelButtonClick = null;
 
-  constructor({ point = {}, onSubmitButtonClick, destinations, offersByType }) {
+  constructor({ point = {}, onSubmitButtonClick, destinations, offersByType, onCancelButtonClick }) {
     super();
     this.#onSubmitButtonClick = onSubmitButtonClick;
     this.#destinations = destinations;
     this.#offersByType = offersByType;
+    this.#onCancelButtonClick = onCancelButtonClick;
 
     const initialState = getInitialPointState(point);
 
@@ -160,6 +164,11 @@ export default class CreateForm extends AbstractStatefulView {
   _restoreHandlers() {
     const form = this.element;
     form.addEventListener('submit', this.#submitButtonClickHandler);
+
+    const cancelBtn = this.element.querySelector('.event__reset-btn');
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', this.#cancelButtonClickHandler);
+    }
 
     const typeLabels = this.element.querySelectorAll('.event__type-label');
     typeLabels.forEach((label) => {
@@ -214,5 +223,10 @@ export default class CreateForm extends AbstractStatefulView {
   #submitButtonClickHandler = (evt) => {
     evt.preventDefault();
     this.#onSubmitButtonClick(this._state);
+  };
+
+  #cancelButtonClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#onCancelButtonClick();
   };
 }

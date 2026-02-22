@@ -103,7 +103,24 @@ const MAX_PRICE = 1000;
 
 const POINTS_COUNT = 3;
 
-const MESSAGE_FOR_EMPTY_LIST = 'Click New Event to create your first point';
+const MESSAGE_FOR_EMPTY_LIST = {
+  everything: 'Click New Event to create your first point',
+  future: 'There are no future events now',
+  present: 'There are no present events now',
+  past: 'There are no past events now'
+};
+
+const USER_ACTION = {
+  UPDATE_POINT: 'UPDATE_POINT',
+  DELETE_POINT: 'DELETE_POINT',
+  ADD_POINT: 'ADD_POINT',
+};
+
+const UPDATE_TYPE = {
+  PATCH: 'PATCH',
+  MINOR: 'MINOR',
+  MAJOR: 'MAJOR',
+};
 
 export {
   SORT_TYPE,
@@ -118,5 +135,7 @@ export {
   MAX_PRICE,
   POINTS_COUNT,
   MESSAGE_FOR_EMPTY_LIST,
+  USER_ACTION,
+  UPDATE_TYPE,
 };
 

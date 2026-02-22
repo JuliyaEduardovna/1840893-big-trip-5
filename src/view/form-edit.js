@@ -5,6 +5,7 @@ import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import { getInitialPointState } from '../utils/utils.js';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
+import he from 'he';
 
 function createFormEditTemplate(point, destinations) {
   const { type, destination, basePrice, dateFrom, dateTo, offers = [] } = point;
@@ -31,10 +32,10 @@ function createFormEditTemplate(point, destinations) {
           <label class="event__label event__type-output" for="event-destination-1">
             ${type.charAt(0).toUpperCase() + type.slice(1)}
           </label>
-          <input class="event__input event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${destination.name}" list="destination-list-1">
+          <input class="event__input event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${he.encode(destination.name)}" list="destination-list-1">
           <datalist id="destination-list-1">
             ${destinations?.map((dest) => `
-              <option value="${dest.name}"></option>
+              <option value="${he.encode(dest.name)}"></option>
             `).join('') || ''}
           </datalist>
         </div>
@@ -52,7 +53,7 @@ function createFormEditTemplate(point, destinations) {
             <span class="visually-hidden">Price</span>
             &euro;
           </label>
-          <input class="event__input event__input--price" id="event-price-1" type="text" name="event-price" value="${basePrice}">
+          <input class="event__input event__input--price" id="event-price-1" type="number" min="0" name="event-price" value="${basePrice}">
         </div>
 
         <button class="event__save-btn btn btn--blue" type="submit">Save</button>
@@ -70,13 +71,13 @@ function createFormEditTemplate(point, destinations) {
 
         <section class="event__section event__section--destination">
           <h3 class="event__section-title event__section-title--destination">Destination</h3>
-          <p class="event__destination-description">${description}</p>
+          <p class="event__destination-description">${he.encode(description)}</p>
 
           ${pictures ? `
             <div class="event__photos-container">
               <div class="event__photos-tape">
                 ${pictures.map((picture) => `
-                  <img class="event__photo" src="${picture.src}" alt="${picture.description || 'Photo'}">
+                  <img class="event__photo" src="${he.encode(picture.src)}" alt="${he.encode(picture.description || 'Photo')}">
                 `).join('')}
               </div>
             </div>
@@ -94,11 +95,13 @@ export default class EditForm extends AbstractStatefulView {
   #offersByType = null;
   #dateFromPicker = null;
   #dateToPicker = null;
+  #onDeleteButtonClick = null;
 
-  constructor({ point, onCloseButtonClick, onSubmitButtonClick, destinations, offersByType }) {
+  constructor({ point, onCloseButtonClick, onSubmitButtonClick, destinations, offersByType, onDeleteButtonClick }) {
     super();
     this.#onCloseButtonClick = onCloseButtonClick;
     this.#onSubmitButtonClick = onSubmitButtonClick;
+    this.#onDeleteButtonClick = onDeleteButtonClick;
     this.#destinations = destinations;
     this.#offersByType = offersByType;
     this._setState(getInitialPointState(point));
@@ -117,6 +120,11 @@ export default class EditForm extends AbstractStatefulView {
 
     const form = this.element;
     form.addEventListener('submit', this.#submitButtonClickHandler);
+
+    const deleteBtn = this.element.querySelector('.event__reset-btn');
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', this.#deleteButtonClickHandler);
+    }
 
     const typeLabels = this.element.querySelectorAll('.event__type-label');
     typeLabels.forEach((label) => {
@@ -241,5 +249,10 @@ export default class EditForm extends AbstractStatefulView {
   #submitButtonClickHandler = (evt) => {
     evt.preventDefault();
     this.#onSubmitButtonClick();
+  };
+
+  #deleteButtonClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#onDeleteButtonClick();
   };
 }

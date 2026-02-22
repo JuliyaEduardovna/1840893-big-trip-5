@@ -3,26 +3,44 @@ import Board from '../view/board.js';
 import Message from '../view/message.js';
 import PointPresenter from './point-presenter.js';
 import { render, RenderPosition } from '../framework/render.js';
-import { MESSAGE_FOR_EMPTY_LIST } from '../constants/constants.js';
+import { MESSAGE_FOR_EMPTY_LIST, USER_ACTION } from '../constants/constants.js';
 import dayjs from 'dayjs';
 
 export default class ListPresenter {
   #boardComponent = null;
   #sortComponent = null;
   #boardContainer = null;
-  #model = null;
+  #pointsModel = null;
+  #destinationsModel = null;
+  #offersModel = null;
   #pointPresenters = new Map();
   #currentSortType = 'Day';
   #points = [];
+  #currentFilter = 'everything';
 
-  constructor({ boardContainer, model }) {
+  constructor({ boardContainer, pointsModel, destinationsModel, offersModel }) {
     this.#boardContainer = boardContainer;
-    this.#model = model;
+    this.#pointsModel = pointsModel;
+    this.#destinationsModel = destinationsModel;
+    this.#offersModel = offersModel;
+
+    this.#pointsModel.addObserver(this.#handleModelChange);
   }
 
-  init(points) {
+  resetSort() {
+    this.#currentSortType = 'Day';
+  }
+
+  setViewState({ isCreating }) {
+    if (isCreating) {
+      this.#pointPresenters.forEach((presenter) => presenter.resetView());
+    }
+  }
+
+  init(points, filterType) {
     this.#points = [...points];
     this.#currentSortType = 'Day';
+    this.#currentFilter = filterType;
 
     this.#boardContainer.innerHTML = '';
 
@@ -68,8 +86,9 @@ export default class ListPresenter {
     this.#boardComponent.element.innerHTML = '';
 
     if (points.length === 0) {
-      const message = new Message({ message: MESSAGE_FOR_EMPTY_LIST });
-      render(message, this.#boardComponent.element);
+      const message = MESSAGE_FOR_EMPTY_LIST[this.#currentFilter];
+      const messageComponent = new Message({ message });
+      render(messageComponent, this.#boardComponent.element);
       return;
     }
 
@@ -82,23 +101,23 @@ export default class ListPresenter {
     const pointPresenter = new PointPresenter({
       container: this.#boardComponent.element,
       point,
-      model: this.#model,
+      pointsModel: this.#pointsModel,
+      destinationsModel: this.#destinationsModel,
+      offersModel: this.#offersModel,
       onViewChange: () =>
         this.#pointPresenters.forEach((presenter) => presenter.resetView()),
-      onDataChange: (updatedPoint) => {
-        this.#model.updatePoint(updatedPoint);
-
-        this.#points = this.#points.map((p) =>
-          p.id === updatedPoint.id ? updatedPoint : p,
-        );
-
-        this.#pointPresenters.forEach((p) => p.destroy());
-        this.#pointPresenters.clear();
-        const sortedPoints = this.#sortPoints(
-          this.#points,
-          this.#currentSortType,
-        );
-        this.#renderPoints(sortedPoints);
+      onDataChange: (actionType, updatedPoint) => {
+        switch (actionType) {
+          case USER_ACTION.UPDATE_POINT:
+            this.#pointsModel.updatePoint(updatedPoint);
+            break;
+          case USER_ACTION.DELETE_POINT:
+            this.#pointsModel.deletePoint(updatedPoint);
+            break;
+          case USER_ACTION.ADD_POINT:
+            this.#pointsModel.addPoint(updatedPoint);
+            break;
+        }
       },
     });
 
@@ -129,4 +148,15 @@ export default class ListPresenter {
 
     return sortedPoints;
   }
+
+  #handleModelChange = () => {
+    this.#pointPresenters.forEach((presenter) => presenter.destroy());
+    this.#pointPresenters.clear();
+
+    const points = this.#pointsModel.getPoints();
+    this.#points = [...points];
+
+    const sortedPoints = this.#sortPoints(this.#points, this.#currentSortType);
+    this.#renderPoints(sortedPoints);
+  };
 }

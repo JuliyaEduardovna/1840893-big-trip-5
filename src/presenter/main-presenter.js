@@ -1,51 +1,103 @@
 import ListPresenter from './list-presenter.js';
-import Filter from '../view/filter.js';
 import TripInfo from '../view/trip-info.js';
 import { render, RenderPosition } from '../framework/render.js';
 import dayjs from 'dayjs';
+import CreateForm from '../view/form-create.js';
 
 export default class MainPresenter {
   #boardContainer = null;
   #headerContainer = null;
-  #model = null;
-  #currentFilter = 'everything';
+  #pointsModel = null;
+  #destinationsModel = null;
+  #offersModel = null;
   #listPresenter = null;
+  #filterModel = null;
+  #createFormComponent = null;
+  #newEventButton = null;
 
-  constructor({ boardContainer, headerContainer, model }) {
+  constructor({
+    boardContainer,
+    headerContainer,
+    pointsModel,
+    destinationsModel,
+    offersModel,
+    filterModel,
+  }) {
     this.#boardContainer = boardContainer;
     this.#headerContainer = headerContainer;
-    this.#model = model;
+    this.#pointsModel = pointsModel;
+    this.#destinationsModel = destinationsModel;
+    this.#offersModel = offersModel;
+    this.#filterModel = filterModel;
+
+    this.#filterModel.addObserver(this.#handleModelChange);
   }
 
   init() {
-    const points = this.#model.points;
-
     /* Header */
     render(new TripInfo(), this.#headerContainer, RenderPosition.AFTERBEGIN);
 
-    /* Available filters */
-    const availableFilters = this.#getAvailableFilters(points);
-    const filterComponent = new Filter({
-      availableFilters,
-      onFilterChange: (filterType) => {
-        this.#currentFilter = filterType;
-        const filteredPointsByFilter = this.#filterPoints(points, filterType);
-        this.#listPresenter.init(filteredPointsByFilter);
-      },
-    });
-
-    render(filterComponent, this.#headerContainer);
-    filterComponent.setFilterChangeHandler();
+    /* New Event Button */
+    this.#newEventButton = document.querySelector('.trip-main__event-add-btn');
+    this.#newEventButton.addEventListener('click', this.#handleNewEventClick);
 
     /* Points List */
-    const filteredPoints = this.#filterPoints(points, this.#currentFilter); // ЭТО ОСТАВЛЯЕМ
+    const filteredPoints = this.#getPoints();
+    const currentFilter = this.#filterModel.getFilter();
+
     this.#listPresenter = new ListPresenter({
       boardContainer: this.#boardContainer,
-      model: this.#model,
+      pointsModel: this.#pointsModel,
+      destinationsModel: this.#destinationsModel,
+      offersModel: this.#offersModel,
     });
 
-    this.#listPresenter.init(filteredPoints);
+    this.#listPresenter.init(filteredPoints, currentFilter);
   }
+
+  #handleNewEventClick = () => {
+    this.#filterModel.setFilter('everything');
+
+    this.#listPresenter.resetSort();
+
+    this.#listPresenter.setViewState({ isCreating: true });
+
+    this.#createFormComponent = new CreateForm({
+      destinations: this.#destinationsModel.getDestinations(),
+      offersByType: this.#offersModel.getOffers(),
+      onSubmitButtonClick: this.#handleCreateSubmit,
+      onCancelButtonClick: this.#handleCreateCancel,
+    });
+
+    render(
+      this.#createFormComponent,
+      this.#boardContainer,
+      RenderPosition.AFTERBEGIN,
+    );
+
+    this.#newEventButton.disabled = true;
+  };
+
+  #handleCreateSubmit = (point) => {
+    this.#pointsModel.addPoint(point);
+    this.#handleCreateCancel();
+  };
+
+  #handleCreateCancel = () => {
+    if (this.#createFormComponent) {
+      this.#createFormComponent.element.remove();
+      this.#createFormComponent = null;
+    }
+    this.#newEventButton.disabled = false;
+    this.#listPresenter.setViewState({ isCreating: false });
+  };
+
+  #handleModelChange = () => {
+    this.#listPresenter.resetSort();
+    const filteredPoints = this.#getPoints();
+    const currentFilter = this.#filterModel.getFilter();
+    this.#listPresenter.init(filteredPoints, currentFilter);
+  };
 
   #filterPoints(points, filterType) {
     const now = dayjs();
@@ -70,18 +122,9 @@ export default class MainPresenter {
     }
   }
 
-  #getAvailableFilters(points) {
-    const now = dayjs();
-
-    return {
-      everything: points.length > 0,
-      future: points.some((point) => dayjs(point.dateFrom).isAfter(now)),
-      present: points.some(
-        (point) =>
-          dayjs(point.dateFrom).isBefore(now) &&
-          dayjs(point.dateTo).isAfter(now),
-      ),
-      past: points.some((point) => dayjs(point.dateTo).isBefore(now)),
-    };
+  #getPoints() {
+    const points = this.#pointsModel.getPoints();
+    const filterType = this.#filterModel.getFilter();
+    return this.#filterPoints(points, filterType);
   }
 }
