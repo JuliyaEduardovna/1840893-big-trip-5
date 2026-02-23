@@ -15,13 +15,13 @@ export default class FilterPresenter {
   }
 
   init() {
-    const points = this.#pointsModel.getPoints();
+    const points = this.#pointsModel.points;
     const availableFilters = this.#getAvailableFilters(points);
 
     this.#filterComponent = new Filter({
       availableFilters,
       onFilterChange: (filterType) => {
-        this.#filterModel.setFilter(filterType);
+        this.#filterModel.filter = filterType;
       },
     });
 

@@ -3,11 +3,11 @@ import { OFFERS } from '../mocks/offers.js';
 export default class OffersModel {
   #offers = OFFERS;
 
-  getOffers() {
+  get offers() {
     return this.#offers;
   }
 
-  setOffers(offers) {
+  set offers(offers) {
     this.#offers = offers;
   }
 

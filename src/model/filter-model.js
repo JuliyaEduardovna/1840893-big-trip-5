@@ -3,11 +3,11 @@ import Observable from '../framework/observable.js';
 export default class FilterModel extends Observable {
   #filter = 'everything';
 
-  getFilter() {
+  get filter() {
     return this.#filter;
   }
 
-  setFilter(filter) {
+  set filter(filter) {
     this.#filter = filter;
     this._notify();
   }

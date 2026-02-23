@@ -43,7 +43,7 @@ export default class MainPresenter {
 
     /* Points List */
     const filteredPoints = this.#getPoints();
-    const currentFilter = this.#filterModel.getFilter();
+    const currentFilter = this.#filterModel.filter;
 
     this.#listPresenter = new ListPresenter({
       boardContainer: this.#boardContainer,
@@ -56,15 +56,15 @@ export default class MainPresenter {
   }
 
   #handleNewEventClick = () => {
-    this.#filterModel.setFilter('everything');
+    this.#filterModel.filter = 'everything';
 
     this.#listPresenter.resetSort();
 
     this.#listPresenter.setViewState({ isCreating: true });
 
     this.#createFormComponent = new CreateForm({
-      destinations: this.#destinationsModel.getDestinations(),
-      offersByType: this.#offersModel.getOffers(),
+      destinations: this.#destinationsModel.destinations,
+      offersByType: this.#offersModel.offers,
       onSubmitButtonClick: this.#handleCreateSubmit,
       onCancelButtonClick: this.#handleCreateCancel,
     });
@@ -95,7 +95,7 @@ export default class MainPresenter {
   #handleModelChange = () => {
     this.#listPresenter.resetSort();
     const filteredPoints = this.#getPoints();
-    const currentFilter = this.#filterModel.getFilter();
+    const currentFilter = this.#filterModel.filter;
     this.#listPresenter.init(filteredPoints, currentFilter);
   };
 
@@ -123,8 +123,8 @@ export default class MainPresenter {
   }
 
   #getPoints() {
-    const points = this.#pointsModel.getPoints();
-    const filterType = this.#filterModel.getFilter();
+    const points = this.#pointsModel.points;
+    const filterType = this.#filterModel.filter;
     return this.#filterPoints(points, filterType);
   }
 }

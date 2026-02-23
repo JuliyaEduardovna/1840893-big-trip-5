@@ -60,8 +60,8 @@ export default class PointPresenter {
       onCloseButtonClick: this.#replaceEditToPoint,
       onSubmitButtonClick: this.#replaceEditToPoint,
       onDeleteButtonClick: this.#handleDeleteClick,
-      destinations: this.#destinationsModel.getDestinations(),
-      offersByType: this.#offersModel.getOffers(),
+      destinations: this.#destinationsModel.destinations,
+      offersByType: this.#offersModel.offers,
     });
 
     render(this.#pointComponent, this.#boardItem.element);
@@ -98,8 +98,8 @@ export default class PointPresenter {
         onCloseButtonClick: this.#replaceEditToPoint,
         onSubmitButtonClick: this.#handleFormSubmit,
         onDeleteButtonClick: this.#handleDeleteClick,
-        destinations: this.#destinationsModel.getDestinations(),
-        offersByType: this.#offersModel.getOffers(),
+        destinations: this.#destinationsModel.destinations,
+        offersByType: this.#offersModel.offers,
       });
       replace(this.#editFormComponent, this.#pointComponent);
     } else {

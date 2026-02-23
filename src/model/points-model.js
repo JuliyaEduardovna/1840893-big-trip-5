@@ -5,11 +5,11 @@ import { UPDATE_TYPE } from '../constants/constants.js';
 export default class PointsModel extends Observable {
   #points = POINTS;
 
-  getPoints() {
+  get points() {
     return this.#points;
   }
 
-  setPoints(points) {
+  set points(points) {
     this.#points = points;
     this._notify(UPDATE_TYPE.MAJOR);
   }

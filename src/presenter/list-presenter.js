@@ -153,7 +153,7 @@ export default class ListPresenter {
     this.#pointPresenters.forEach((presenter) => presenter.destroy());
     this.#pointPresenters.clear();
 
-    const points = this.#pointsModel.getPoints();
+    const points = this.#pointsModel.points;
     this.#points = [...points];
 
     const sortedPoints = this.#sortPoints(this.#points, this.#currentSortType);
