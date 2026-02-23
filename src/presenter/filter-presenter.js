@@ -1,6 +1,5 @@
 import Filter from '../view/filter.js';
 import { render } from '../framework/render.js';
-import dayjs from 'dayjs';
 
 export default class FilterPresenter {
   #filterComponent = null;
@@ -12,14 +11,20 @@ export default class FilterPresenter {
     this.#headerContainer = headerContainer;
     this.#pointsModel = pointsModel;
     this.#filterModel = filterModel;
+    this.#pointsModel.addObserver(this.#handleModelChange);
   }
 
   init() {
-    const points = this.#pointsModel.points;
-    const availableFilters = this.#getAvailableFilters(points);
+    this.#renderFilters();
+  }
+
+  #renderFilters() {
+    if (this.#filterComponent) {
+      this.#filterComponent.element.remove();
+    }
 
     this.#filterComponent = new Filter({
-      availableFilters,
+      currentFilter: this.#filterModel.filter,
       onFilterChange: (filterType) => {
         this.#filterModel.filter = filterType;
       },
@@ -29,18 +34,7 @@ export default class FilterPresenter {
     this.#filterComponent.setFilterChangeHandler();
   }
 
-  #getAvailableFilters(points) {
-    const now = dayjs();
-
-    return {
-      everything: points.length > 0,
-      future: points.some((point) => dayjs(point.dateFrom).isAfter(now)),
-      present: points.some(
-        (point) =>
-          dayjs(point.dateFrom).isBefore(now) &&
-          dayjs(point.dateTo).isAfter(now),
-      ),
-      past: points.some((point) => dayjs(point.dateTo).isBefore(now)),
-    };
-  }
+  #handleModelChange = () => {
+    this.#renderFilters();
+  };
 }

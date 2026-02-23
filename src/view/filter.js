@@ -1,7 +1,7 @@
 import { FILTER_TYPE } from '../constants/constants.js';
 import AbstractView from '../framework/view/abstract-view.js';
 
-function createFilterItemTemplate(filterType, isAvailable) {
+function createFilterItemTemplate(filterType, currentFilter) {
   const type = filterType.toLowerCase();
 
   return `
@@ -12,11 +12,10 @@ function createFilterItemTemplate(filterType, isAvailable) {
         type="radio"
         name="trip-filter"
         value="${type}"
-        ${filterType === 'Everything' && isAvailable ? 'checked' : ''}
-        ${isAvailable ? '' : 'disabled'}
+        ${currentFilter === type ? 'checked' : ''}
       >
       <label
-        class="trip-filters__filter-label ${isAvailable ? '' : 'trip-filters__filter-label--disabled'}"
+        class="trip-filters__filter-label"
         for="filter-${type}"
       >
         ${filterType}
@@ -25,12 +24,9 @@ function createFilterItemTemplate(filterType, isAvailable) {
   `;
 }
 
-function createFilterTemplate(availableFilters) {
+function createFilterTemplate(currentFilter) {
   const filterItems = FILTER_TYPE.map((filterType) =>
-    createFilterItemTemplate(
-      filterType,
-      availableFilters[filterType.toLowerCase()],
-    ),
+    createFilterItemTemplate(filterType, currentFilter)
   ).join('');
 
   return `
@@ -42,15 +38,16 @@ function createFilterTemplate(availableFilters) {
 
 export default class Filter extends AbstractView {
   #onFilterChange = null;
+  #currentFilter = null;
 
-  constructor({ availableFilters, onFilterChange }) {
+  constructor({ currentFilter, onFilterChange }) {
     super();
-    this.availableFilters = availableFilters;
+    this.#currentFilter = currentFilter;
     this.#onFilterChange = onFilterChange;
   }
 
   get template() {
-    return createFilterTemplate(this.availableFilters);
+    return createFilterTemplate(this.#currentFilter);
   }
 
   setFilterChangeHandler() {
