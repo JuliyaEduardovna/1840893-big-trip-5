@@ -3,13 +3,15 @@ import Offer from './offer.js';
 import dayjs from 'dayjs';
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import { getInitialPointState } from '../utils/utils.js';
+import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.min.css';
 import he from 'he';
 
 function createFormCreateTemplate(point, destinations) {
   const {
     type = 'taxi',
     destination = { name: '', description: '', pictures: [] },
-    basePrice = '',
+    basePrice = 0,
     dateFrom = dayjs(),
     dateTo = dayjs(),
     offers = []
@@ -17,8 +19,13 @@ function createFormCreateTemplate(point, destinations) {
 
   const { description: destDescription, pictures = [] } = destination;
 
-  const formattedDateFrom = dayjs(dateFrom).format('DD/MM/YY HH:mm');
-  const formattedDateTo = dayjs(dateTo).format('DD/MM/YY HH:mm');
+  const formattedDateFrom = dayjs(dateFrom).isValid()
+    ? dayjs(dateFrom).format('DD/MM/YY HH:mm')
+    : dayjs().format('DD/MM/YY HH:mm');
+
+  const formattedDateTo = dayjs(dateTo).isValid()
+    ? dayjs(dateTo).format('DD/MM/YY HH:mm')
+    : dayjs().add(1, 'hour').format('DD/MM/YY HH:mm');
 
   return `
     <form class="event event--edit" action="#" method="post">
@@ -57,7 +64,7 @@ function createFormCreateTemplate(point, destinations) {
             type="text"
             name="event-destination"
             value="${he.encode(destination.name)}"
-            list="destination-list-1"
+            list="destination-list-1" required
           >
 
           <datalist id="destination-list-1">
@@ -99,6 +106,7 @@ function createFormCreateTemplate(point, destinations) {
             value="${basePrice}"
             type="number"
             min="0"
+            required
           >
         </div>
 
@@ -136,8 +144,16 @@ export default class CreateForm extends AbstractStatefulView {
   #destinations = null;
   #offersByType = null;
   #onCancelButtonClick = null;
+  #dateFromPicker = null;
+  #dateToPicker = null;
 
-  constructor({ point = {}, onSubmitButtonClick, destinations, offersByType, onCancelButtonClick }) {
+  constructor({
+    point = {},
+    onSubmitButtonClick,
+    destinations,
+    offersByType,
+    onCancelButtonClick,
+  }) {
     super();
     this.#onSubmitButtonClick = onSubmitButtonClick;
     this.#destinations = destinations;
@@ -146,7 +162,9 @@ export default class CreateForm extends AbstractStatefulView {
 
     const initialState = getInitialPointState(point);
 
-    const offersForType = this.#offersByType?.find((group) => group.type === initialState.type);
+    const offersForType = this.#offersByType?.find(
+      (group) => group.type === initialState.type,
+    );
 
     initialState.offers = offersForType
       ? offersForType.offers.map((offer) => ({ ...offer, selected: false }))
@@ -175,10 +193,81 @@ export default class CreateForm extends AbstractStatefulView {
       label.addEventListener('click', this.#typeLabelClickHandler);
     });
 
-    const destinationInput = this.element.querySelector('.event__input--destination');
+    const destinationInput = this.element.querySelector(
+      '.event__input--destination',
+    );
     if (destinationInput) {
-      destinationInput.addEventListener('change', this.#destinationChangeHandler);
+      destinationInput.addEventListener(
+        'change',
+        this.#destinationChangeHandler,
+      );
     }
+
+    const priceInput = this.element.querySelector('#event-price-1');
+    if (priceInput) {
+      priceInput.addEventListener('change', this.#priceInputHandler);
+    }
+
+    this.#initDatepickers();
+  }
+
+  #priceInputHandler = (evt) => {
+    evt.preventDefault();
+    this.updateElement({
+      basePrice: evt.target.value,
+    });
+  };
+
+  #initDatepickers() {
+    const dateFromInput = this.element.querySelector('#event-start-time-1');
+    const dateToInput = this.element.querySelector('#event-end-time-1');
+
+    if (dateFromInput) {
+      this.#dateFromPicker = flatpickr(dateFromInput, {
+        enableTime: true,
+        dateFormat: 'd/m/y H:i',
+        // eslint-disable-next-line camelcase
+        time_24hr: true,
+        defaultDate: this._state.dateFrom,
+        onChange: (selectedDates) => {
+          this.updateElement({
+            dateFrom: selectedDates[0],
+          });
+
+          if (this.#dateToPicker && selectedDates[0]) {
+            this.#dateToPicker.set('minDate', selectedDates[0]);
+          }
+        },
+      });
+    }
+
+    if (dateToInput) {
+      this.#dateToPicker = flatpickr(dateToInput, {
+        enableTime: true,
+        dateFormat: 'd/m/y H:i',
+        // eslint-disable-next-line camelcase
+        time_24hr: true,
+        defaultDate: this._state.dateTo,
+        minDate: this._state.dateFrom,
+        onChange: (selectedDates) => {
+          this.updateElement({
+            dateTo: selectedDates[0],
+          });
+        },
+      });
+    }
+  }
+
+  removeElement() {
+    if (this.#dateFromPicker) {
+      this.#dateFromPicker.destroy();
+    }
+    if (this.#dateToPicker) {
+      this.#dateToPicker.destroy();
+    }
+    this.#dateFromPicker = null;
+    this.#dateToPicker = null;
+    super.removeElement();
   }
 
   #typeLabelClickHandler = (evt) => {
@@ -188,7 +277,9 @@ export default class CreateForm extends AbstractStatefulView {
     const typeText = label.textContent.trim();
     const newType = typeText.toLowerCase();
 
-    const offersForType = this.#offersByType.find((group) => group.type === newType);
+    const offersForType = this.#offersByType.find(
+      (group) => group.type === newType,
+    );
 
     if (!offersForType) {
       return;
@@ -196,12 +287,12 @@ export default class CreateForm extends AbstractStatefulView {
 
     const newOffers = offersForType.offers.map((offer) => ({
       ...offer,
-      selected: false
+      selected: false,
     }));
 
     this.updateElement({
       type: newType,
-      offers: newOffers
+      offers: newOffers,
     });
   };
 
@@ -210,19 +301,47 @@ export default class CreateForm extends AbstractStatefulView {
     const destinationName = evt.target.value;
 
     const selectedDestination = this.#destinations.find(
-      (dest) => dest.name === destinationName
+      (dest) => dest.name === destinationName,
     );
 
     if (selectedDestination) {
       this.updateElement({
-        destination: selectedDestination
+        destination: selectedDestination,
       });
     }
   };
 
   #submitButtonClickHandler = (evt) => {
     evt.preventDefault();
-    this.#onSubmitButtonClick(this._state);
+
+    const destinationInput = this.element.querySelector('.event__input--destination');
+    const destinationName = destinationInput.value;
+
+    const selectedDestination = this.#destinations.find(
+      (dest) => dest.name === destinationName,
+    );
+
+    if (!selectedDestination) {
+      return;
+    }
+
+    const dateFromObj = dayjs(this._state.dateFrom);
+    const dateToObj = dayjs(this._state.dateTo);
+    const price = Number(this._state.basePrice);
+
+    if (!price && price !== 0) {
+      return;
+    }
+
+    const pointToSubmit = {
+      ...this._state,
+      destination: selectedDestination,
+      dateFrom: dateFromObj.toISOString(),
+      dateTo: dateToObj.toISOString(),
+      basePrice: price,
+    };
+
+    this.#onSubmitButtonClick(pointToSubmit);
   };
 
   #cancelButtonClickHandler = (evt) => {

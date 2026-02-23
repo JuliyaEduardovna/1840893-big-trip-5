@@ -37,9 +37,9 @@ export function getInitialPointState(point = {}) {
       description: '',
       pictures: []
     },
-    basePrice: point.basePrice || '',
-    dateFrom: point.dateFrom || dayjs(),
-    dateTo: point.dateTo || dayjs(),
+    basePrice: point.basePrice || 0,
+    dateFrom: point.dateFrom || dayjs().toISOString(),
+    dateTo: point.dateTo || dayjs().add(1, 'hour').toISOString(),
     offers: point.offers || []
   };
 }
