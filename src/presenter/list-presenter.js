@@ -17,12 +17,14 @@ export default class ListPresenter {
   #currentSortType = 'Day';
   #points = [];
   #currentFilter = 'everything';
+  #onCloseCreateForm = null;
 
-  constructor({ boardContainer, pointsModel, destinationsModel, offersModel }) {
+  constructor({ boardContainer, pointsModel, destinationsModel, offersModel, onCloseCreateForm }) {
     this.#boardContainer = boardContainer;
     this.#pointsModel = pointsModel;
     this.#destinationsModel = destinationsModel;
     this.#offersModel = offersModel;
+    this.#onCloseCreateForm = onCloseCreateForm;
 
     this.#pointsModel.addObserver(this.#handleModelChange);
   }
@@ -34,6 +36,9 @@ export default class ListPresenter {
   setViewState({ isCreating }) {
     if (isCreating) {
       this.#pointPresenters.forEach((presenter) => presenter.resetView());
+      if (this.#onCloseCreateForm) {
+        this.#onCloseCreateForm();
+      }
     }
   }
 
@@ -104,8 +109,12 @@ export default class ListPresenter {
       pointsModel: this.#pointsModel,
       destinationsModel: this.#destinationsModel,
       offersModel: this.#offersModel,
-      onViewChange: () =>
-        this.#pointPresenters.forEach((presenter) => presenter.resetView()),
+      onViewChange: () => {
+        this.#pointPresenters.forEach((presenter) => presenter.resetView());
+        if (this.#onCloseCreateForm) {
+          this.#onCloseCreateForm();
+        }
+      },
       onDataChange: (actionType, updatedPoint) => {
         switch (actionType) {
           case USER_ACTION.UPDATE_POINT:

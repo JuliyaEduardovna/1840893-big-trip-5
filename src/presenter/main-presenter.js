@@ -50,12 +50,25 @@ export default class MainPresenter {
       pointsModel: this.#pointsModel,
       destinationsModel: this.#destinationsModel,
       offersModel: this.#offersModel,
+      onCloseCreateForm: () => this.closeCreateForm(),
     });
 
     this.#listPresenter.init(filteredPoints, currentFilter);
   }
 
+  closeCreateForm() {
+    if (this.#createFormComponent) {
+      this.#createFormComponent.element.remove();
+      this.#createFormComponent = null;
+      this.#newEventButton.disabled = false;
+    }
+  }
+
   #handleNewEventClick = () => {
+    if (this.#createFormComponent) {
+      return;
+    }
+
     this.#filterModel.filter = 'everything';
 
     this.#listPresenter.resetSort();
