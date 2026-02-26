@@ -121,17 +121,11 @@ export default class PointPresenter {
       isFavorite: !this.#point.isFavorite,
     };
 
-    this.#onDataChange(
-      USER_ACTION.UPDATE_POINT,
-      updatedPoint,
-    );
+    this.#onDataChange(USER_ACTION.UPDATE_POINT, updatedPoint);
   };
 
   #handleDeleteClick = () => {
-    this.#onDataChange(
-      USER_ACTION.DELETE_POINT,
-      this.#point,
-    );
+    this.#onDataChange(USER_ACTION.DELETE_POINT, this.#point);
   };
 
   #handleFormSubmit = (updatedPoint) => {

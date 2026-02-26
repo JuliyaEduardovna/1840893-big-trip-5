@@ -1,7 +1,5 @@
-import { OFFERS } from '../mocks/offers.js';
-
 export default class OffersModel {
-  #offers = OFFERS;
+  #offers = [];
 
   get offers() {
     return this.#offers;

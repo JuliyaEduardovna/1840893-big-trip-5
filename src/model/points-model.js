@@ -1,9 +1,8 @@
 import Observable from '../framework/observable.js';
-import { POINTS } from '../mocks/points.js';
 import { UPDATE_TYPE } from '../constants/constants.js';
 
 export default class PointsModel extends Observable {
-  #points = POINTS;
+  #points = [];
 
   get points() {
     return this.#points;
@@ -11,7 +10,6 @@ export default class PointsModel extends Observable {
 
   set points(points) {
     this.#points = points;
-    this._notify(UPDATE_TYPE.MAJOR);
   }
 
   updatePoint(updatedPoint) {
