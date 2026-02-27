@@ -1,37 +1,77 @@
-import Observable from '../framework/observable.js';
+import Observable from '../framework/observable';
 import { UPDATE_TYPE } from '../constants/constants.js';
 
 export default class PointsModel extends Observable {
   #points = [];
+  #offers;
+  #destinations;
+  #pointsApiService = null;
+
+  constructor({ pointsApiService }) {
+    super();
+    this.#pointsApiService = pointsApiService;
+  }
 
   get points() {
     return this.#points;
   }
 
-  set points(points) {
-    this.#points = points;
+  async init() {
+    try {
+      const [points, destinations, offers] = await Promise.all([
+        this.#pointsApiService.points,
+        this.#pointsApiService.destinations,
+        this.#pointsApiService.offers,
+      ]);
+
+      this.#points = points;
+      this.#destinations = destinations;
+      this.#offers = offers;
+    } catch {
+      this.#points = [];
+      this.#destinations = [];
+      this.#offers = [];
+    }
+
+    this._notify(UPDATE_TYPE.INIT);
   }
 
-  updatePoint(updatedPoint) {
-    this.#points = this.#points.map((point) =>
-      point.id === updatedPoint.id ? updatedPoint : point,
-    );
-    this._notify(UPDATE_TYPE.PATCH, updatedPoint);
+  get offers() {
+    return this.#offers;
   }
 
-  deletePoint(deletedPoint) {
-    const filteredPoints = this.#points.filter(
-      (point) => point.id !== deletedPoint.id,
-    );
+  get destinations() {
+    return this.#destinations;
+  }
 
-    if (filteredPoints.length !== this.#points.length) {
-      this.#points = filteredPoints;
-      this._notify(UPDATE_TYPE.MINOR, deletedPoint);
+  async updatePoint(updateType, update) {
+    const index = this.#points.findIndex((point) => point.id === update.id);
+    if (index === -1) {
+      throw new Error('Point not found');
+    }
+
+    try {
+      const updatedPoint = await this.#pointsApiService.updatePoint(update);
+      this.#points[index] = updatedPoint;
+      this._notify(updateType, updatedPoint);
+    } catch (err) {
+      throw new Error('Can\'t update point');
     }
   }
 
-  addPoint(newPoint) {
-    this.#points = [newPoint, ...this.#points];
-    this._notify(UPDATE_TYPE.MAJOR, newPoint);
+  addPoint(updateType, point) {
+    this.#points = [point, ...this.#points];
+    this._notify(updateType, point);
+  }
+
+  deletePoint(updateType, point) {
+    const index = this.#points.findIndex((p) => p.id === point.id);
+
+    if (index === -1) {
+      throw new Error('Point not found');
+    }
+
+    this.#points.splice(index, 1);
+    this._notify(updateType, point);
   }
 }

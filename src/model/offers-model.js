@@ -17,11 +17,15 @@ export default class OffersModel {
     const offersForType = this.getOffersByType(point.type);
     const allOffers = offersForType ? offersForType.offers : [];
 
+    const selectedIds = Array.isArray(point.offers)
+      ? point.offers.map((selectedOffer) =>
+        typeof selectedOffer === 'object' ? selectedOffer.id : selectedOffer,
+      )
+      : [];
+
     return allOffers.map((offer) => ({
       ...offer,
-      selected: point.offers.some(
-        (selectedOffer) => selectedOffer.id === offer.id,
-      ),
+      selected: selectedIds.includes(offer.id),
     }));
   }
 }

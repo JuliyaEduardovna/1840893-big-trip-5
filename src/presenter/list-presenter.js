@@ -3,7 +3,7 @@ import Board from '../view/board.js';
 import Message from '../view/message.js';
 import PointPresenter from './point-presenter.js';
 import { render, RenderPosition } from '../framework/render.js';
-import { MESSAGE_FOR_EMPTY_LIST, USER_ACTION } from '../constants/constants.js';
+import { MESSAGE_FOR_EMPTY_LIST, USER_ACTION, UPDATE_TYPE } from '../constants/constants.js';
 import dayjs from 'dayjs';
 
 export default class ListPresenter {
@@ -118,13 +118,13 @@ export default class ListPresenter {
       onDataChange: (actionType, updatedPoint) => {
         switch (actionType) {
           case USER_ACTION.UPDATE_POINT:
-            this.#pointsModel.updatePoint(updatedPoint);
+            this.#pointsModel.updatePoint(UPDATE_TYPE.MINOR, updatedPoint);
             break;
           case USER_ACTION.DELETE_POINT:
-            this.#pointsModel.deletePoint(updatedPoint);
+            this.#pointsModel.deletePoint(UPDATE_TYPE.MINOR, updatedPoint);
             break;
           case USER_ACTION.ADD_POINT:
-            this.#pointsModel.addPoint(updatedPoint);
+            this.#pointsModel.addPoint(UPDATE_TYPE.MINOR, updatedPoint);
             break;
         }
       },

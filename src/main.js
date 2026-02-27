@@ -5,14 +5,17 @@ import OffersModel from './model/offers-model.js';
 import FilterModel from './model/filter-model.js';
 import FilterPresenter from './presenter/filter-presenter.js';
 import MainPresenter from './presenter/main-presenter.js';
-import { adaptPoint, adaptDestination, adaptOffers } from './api/adapter.js';
 import Message from './view/message.js';
 import { render } from './framework/render.js';
-import { AUTHORIZATION, END_POINT, FAILED_LOAD_MESSAGE, LOADING_MESSAGE } from './constants/constants.js';
+import {
+  AUTHORIZATION,
+  END_POINT,
+  LOADING_MESSAGE,
+} from './constants/constants.js';
 
 const apiClient = new ApiClient(END_POINT, AUTHORIZATION);
 
-const pointsModel = new PointsModel();
+const pointsModel = new PointsModel({ pointsApiService: apiClient });
 const destinationsModel = new DestinationsModel();
 const offersModel = new OffersModel();
 const filterModel = new FilterModel();
@@ -22,6 +25,8 @@ const siteHeaderElement = document.querySelector('.trip-main');
 
 /* Main page */
 const siteMainElement = document.querySelector('.trip-events');
+
+const newEventButton = document.querySelector('.trip-main__event-add-btn');
 
 const loadingMessage = new Message({ message: LOADING_MESSAGE });
 render(loadingMessage, siteMainElement);
@@ -41,34 +46,19 @@ const mainPresenter = new MainPresenter({
   filterModel,
 });
 
-async function loadData() {
-  try {
-    const [points, destinations, offers] = await Promise.all([
-      apiClient.getPoints(),
-      apiClient.getDestinations(),
-      apiClient.getOffers(),
-    ]);
+newEventButton.disabled = true;
 
-    destinationsModel.destinations = destinations.map(adaptDestination);
+filterPresenter.init();
 
-    pointsModel.points = points.map((point) => ({
-      ...adaptPoint(point),
-      destination: destinationsModel.destinations.find(
-        (dest) => dest.id === point.destination
-      )
-    }));
-
-    offersModel.offers = adaptOffers(offers);
-
-    filterPresenter.init();
-    mainPresenter.init();
-  } catch (error) {
+pointsModel
+  .init()
+  .finally(() => {
     loadingMessage.element.remove();
-    const errorMessage = new Message({
-      message: FAILED_LOAD_MESSAGE,
-    });
-    render(errorMessage, siteMainElement);
-  }
-}
 
-loadData();
+    destinationsModel.destinations = pointsModel.destinations;
+    offersModel.offers = pointsModel.offers;
+
+    mainPresenter.init();
+
+    newEventButton.disabled = false;
+  });

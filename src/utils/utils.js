@@ -20,6 +20,7 @@ export function formatDuration(dateFrom, dateTo) {
 
 export function getInitialPointState(point = {}) {
   return {
+    id: point.id,
     type: point.type || 'taxi',
     destination: point.destination || {
       id: '',
@@ -31,5 +32,6 @@ export function getInitialPointState(point = {}) {
     dateFrom: point.dateFrom || dayjs().toISOString(),
     dateTo: point.dateTo || dayjs().add(1, 'hour').toISOString(),
     offers: point.offers || [],
+    isFavorite: typeof point.isFavorite === 'boolean' ? point.isFavorite : false,
   };
 }
