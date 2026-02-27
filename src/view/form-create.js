@@ -325,7 +325,7 @@ export default class CreateForm extends AbstractStatefulView {
       return;
     }
 
-    let dateFromObj = dayjs(this._state.dateFrom);
+    const dateFromObj = dayjs(this._state.dateFrom);
     let dateToObj = dayjs(this._state.dateTo);
     const price = Number(this._state.basePrice);
 
