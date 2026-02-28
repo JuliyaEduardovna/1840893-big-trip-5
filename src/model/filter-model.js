@@ -9,6 +9,6 @@ export default class FilterModel extends Observable {
 
   set filter(filter) {
     this.#filter = filter;
-    this._notify();
+    this._notify('filter', this.#filter);
   }
 }
