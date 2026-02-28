@@ -50,15 +50,21 @@ newEventButton.disabled = true;
 
 filterPresenter.init();
 
-pointsModel
-  .init()
+Promise.all([
+  pointsModel.init(),
+  apiClient.destinations,
+  apiClient.offers,
+])
+  .then(([, destinations, offers]) => {
+    destinationsModel.destinations = destinations;
+    offersModel.offers = offers;
+  })
+  .catch(() => {
+    destinationsModel.destinations = [];
+    offersModel.offers = [];
+  })
   .finally(() => {
     loadingMessage.element.remove();
-
-    destinationsModel.destinations = pointsModel.destinations;
-    offersModel.offers = pointsModel.offers;
-
     mainPresenter.init();
-
     newEventButton.disabled = false;
   });

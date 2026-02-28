@@ -3,8 +3,6 @@ import { UPDATE_TYPE } from '../constants/constants.js';
 
 export default class PointsModel extends Observable {
   #points = [];
-  #offers;
-  #destinations;
   #pointsApiService = null;
 
   constructor({ pointsApiService }) {
@@ -18,30 +16,13 @@ export default class PointsModel extends Observable {
 
   async init() {
     try {
-      const [points, destinations, offers] = await Promise.all([
-        this.#pointsApiService.points,
-        this.#pointsApiService.destinations,
-        this.#pointsApiService.offers,
-      ]);
-
+      const points = await this.#pointsApiService.points;
       this.#points = points;
-      this.#destinations = destinations;
-      this.#offers = offers;
     } catch {
       this.#points = [];
-      this.#destinations = [];
-      this.#offers = [];
     }
 
     this._notify(UPDATE_TYPE.INIT);
-  }
-
-  get offers() {
-    return this.#offers;
-  }
-
-  get destinations() {
-    return this.#destinations;
   }
 
   async updatePoint(updateType, update) {
