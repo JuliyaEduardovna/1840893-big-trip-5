@@ -1,5 +1,6 @@
 import ApiService from '../framework/api-service.js';
 import { METHODS } from '../constants/constants.js';
+import dayjs from 'dayjs';
 
 export default class PointsApiService extends ApiService {
   get points() {
@@ -33,14 +34,8 @@ export default class PointsApiService extends ApiService {
     const adaptedPoint = {
       ...point,
       basePrice: point['base_price'],
-      dateFrom:
-        point['date_from'] !== null
-          ? new Date(point['date_from'])
-          : point['date_from'],
-      dateTo:
-        point['date_to'] !== null
-          ? new Date(point['date_to'])
-          : point['date_to'],
+      dateFrom: point['date_from'],
+      dateTo: point['date_to'],
       isFavorite: point['is_favorite'],
     };
 
@@ -56,14 +51,12 @@ export default class PointsApiService extends ApiService {
     const adaptedPoint = {
       ...point,
       'base_price': point.basePrice,
-      'date_from':
-        point.dateFrom
-          ? new Date(point.dateFrom).toISOString()
-          : null,
-      'date_to':
-        point.dateTo
-          ? new Date(point.dateTo).toISOString()
-          : null,
+      'date_from': point.dateFrom
+        ? dayjs(point.dateFrom).toISOString()
+        : null,
+      'date_to': point.dateTo
+        ? dayjs(point.dateTo).toISOString()
+        : null,
       'is_favorite': point.isFavorite,
       'destination': typeof point.destination === 'object'
         ? point.destination.id
