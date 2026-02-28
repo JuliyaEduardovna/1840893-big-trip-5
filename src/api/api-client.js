@@ -58,14 +58,8 @@ export default class PointsApiService extends ApiService {
         ? dayjs(point.dateTo).toISOString()
         : null,
       'is_favorite': point.isFavorite,
-      'destination': typeof point.destination === 'object'
-        ? point.destination.id
-        : point.destination,
-      'offers': Array.isArray(point.offers)
-        ? point.offers.map((offer) =>
-          typeof offer === 'object' ? offer.id : offer,
-        )
-        : [],
+      'destination': point.destination,
+      'offers': point.offers ?? [],
     };
 
     delete adaptedPoint.basePrice;

@@ -290,7 +290,7 @@ export default class EditForm extends AbstractStatefulView {
     const pointToSubmit = {
       ...this._state,
       id: this._state.id,
-      destination: selectedDestination,
+      destination: selectedDestination.id,
       dateFrom: dateFromObj.toISOString(),
       dateTo: dateToObj.toISOString(),
       basePrice: price,
