@@ -3,7 +3,11 @@ import Board from '../view/board.js';
 import Message from '../view/message.js';
 import PointPresenter from './point-presenter.js';
 import { render, RenderPosition } from '../framework/render.js';
-import { MESSAGE_FOR_EMPTY_LIST, USER_ACTION, UPDATE_TYPE } from '../constants/constants.js';
+import {
+  MESSAGE_FOR_EMPTY_LIST,
+  USER_ACTION,
+  UPDATE_TYPE,
+} from '../constants/constants.js';
 import dayjs from 'dayjs';
 
 export default class ListPresenter {
@@ -19,7 +23,13 @@ export default class ListPresenter {
   #currentFilter = 'everything';
   #onCloseCreateForm = null;
 
-  constructor({ boardContainer, pointsModel, destinationsModel, offersModel, onCloseCreateForm }) {
+  constructor({
+    boardContainer,
+    pointsModel,
+    destinationsModel,
+    offersModel,
+    onCloseCreateForm,
+  }) {
     this.#boardContainer = boardContainer;
     this.#pointsModel = pointsModel;
     this.#destinationsModel = destinationsModel;
@@ -118,7 +128,7 @@ export default class ListPresenter {
       onDataChange: (actionType, updatedPoint) => {
         switch (actionType) {
           case USER_ACTION.UPDATE_POINT:
-            this.#pointsModel.updatePoint(UPDATE_TYPE.MINOR, updatedPoint);
+            this.#pointsModel.updatePoint(UPDATE_TYPE.PATCH, updatedPoint);
             break;
           case USER_ACTION.DELETE_POINT:
             this.#pointsModel.deletePoint(UPDATE_TYPE.MINOR, updatedPoint);
@@ -158,14 +168,33 @@ export default class ListPresenter {
     return sortedPoints;
   }
 
-  #handleModelChange = () => {
-    this.#pointPresenters.forEach((presenter) => presenter.destroy());
-    this.#pointPresenters.clear();
+  #handleModelChange = (updateType, data) => {
+    switch (updateType) {
+      case UPDATE_TYPE.PATCH:
+        {
+          const presenter = this.#pointPresenters.get(data.id);
+          if (presenter) {
+            presenter.updatePoint(data);
+          }
+        }
+        break;
+      case UPDATE_TYPE.MINOR:
+      case UPDATE_TYPE.MAJOR:
+      case UPDATE_TYPE.INIT:
+        {
+          this.#pointPresenters.forEach((presenter) => presenter.destroy());
+          this.#pointPresenters.clear();
 
-    const points = this.#pointsModel.points;
-    this.#points = [...points];
+          const points = this.#pointsModel.points;
+          this.#points = [...points];
 
-    const sortedPoints = this.#sortPoints(this.#points, this.#currentSortType);
-    this.#renderPoints(sortedPoints);
+          const sortedPoints = this.#sortPoints(
+            this.#points,
+            this.#currentSortType,
+          );
+          this.#renderPoints(sortedPoints);
+        }
+        break;
+    }
   };
 }
