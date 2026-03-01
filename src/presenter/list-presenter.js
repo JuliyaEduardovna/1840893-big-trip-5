@@ -196,25 +196,25 @@ export default class ListPresenter {
 
   #handleModelChange = (updateType, data) => {
     switch (updateType) {
-      case UPDATE_TYPE.PATCH:
-        {
-          const presenter = this.#pointPresenters.get(data.id);
-          if (presenter) {
-            presenter.updatePoint(data);
-          }
+      case UPDATE_TYPE.PATCH: {
+        const presenter = this.#pointPresenters.get(data.id);
+        if (presenter) {
+          presenter.updatePoint(data);
         }
         break;
-      case UPDATE_TYPE.MINOR:
+      }
+      case UPDATE_TYPE.MINOR: {
+        this.#pointPresenters.forEach((presenter) => presenter.destroy());
+        this.#pointPresenters.clear();
+
+        const points = this.#getPoints();
+        const sortedPoints = this.#sortPoints(points, this.#currentSortType);
+        this.#renderPoints(sortedPoints);
+        break;
+      }
       case UPDATE_TYPE.MAJOR:
       case UPDATE_TYPE.INIT:
-        {
-          this.#pointPresenters.forEach((presenter) => presenter.destroy());
-          this.#pointPresenters.clear();
-
-          const points = this.#getPoints();
-          const sortedPoints = this.#sortPoints(points, this.#currentSortType);
-          this.#renderPoints(sortedPoints);
-        }
+        this.init();
         break;
     }
   };
