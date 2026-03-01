@@ -16,8 +16,8 @@ import {
 const apiClient = new ApiClient(END_POINT, AUTHORIZATION);
 
 const pointsModel = new PointsModel({ pointsApiService: apiClient });
-const destinationsModel = new DestinationsModel();
-const offersModel = new OffersModel();
+const destinationsModel = new DestinationsModel({ apiService: apiClient });
+const offersModel = new OffersModel({ apiService: apiClient });
 const filterModel = new FilterModel();
 
 /* Header */
@@ -52,19 +52,10 @@ filterPresenter.init();
 
 Promise.all([
   pointsModel.init(),
-  apiClient.destinations,
-  apiClient.offers,
-])
-  .then(([, destinations, offers]) => {
-    destinationsModel.destinations = destinations;
-    offersModel.offers = offers;
-  })
-  .catch(() => {
-    destinationsModel.destinations = [];
-    offersModel.offers = [];
-  })
-  .finally(() => {
-    loadingMessage.element.remove();
-    mainPresenter.init();
-    newEventButton.disabled = false;
-  });
+  destinationsModel.init(),
+  offersModel.init(),
+]).finally(() => {
+  loadingMessage.element.remove();
+  mainPresenter.init();
+  newEventButton.disabled = false;
+});
