@@ -31,25 +31,23 @@ export default class PointsApiService extends ApiService {
   }
 
   #adaptToClient(point) {
-    const adaptedPoint = {
-      ...point,
+    return {
+      id: point.id,
+      type: point.type,
+      destination: point.destination,
       basePrice: point['base_price'],
       dateFrom: point['date_from'],
       dateTo: point['date_to'],
       isFavorite: point['is_favorite'],
+      offers: point.offers,
     };
-
-    delete adaptedPoint['base_price'];
-    delete adaptedPoint['date_from'];
-    delete adaptedPoint['date_to'];
-    delete adaptedPoint['is_favorite'];
-
-    return adaptedPoint;
   }
 
   #adaptToServer(point) {
-    const adaptedPoint = {
-      ...point,
+    return {
+      id: point.id,
+      type: point.type,
+      destination: point.destination,
       'base_price': point.basePrice,
       'date_from': point.dateFrom
         ? dayjs(point.dateFrom).toISOString()
@@ -58,15 +56,7 @@ export default class PointsApiService extends ApiService {
         ? dayjs(point.dateTo).toISOString()
         : null,
       'is_favorite': point.isFavorite,
-      'destination': point.destination,
-      'offers': point.offers ?? [],
+      offers: point.offers ?? [],
     };
-
-    delete adaptedPoint.basePrice;
-    delete adaptedPoint.dateFrom;
-    delete adaptedPoint.dateTo;
-    delete adaptedPoint.isFavorite;
-
-    return adaptedPoint;
   }
 }
